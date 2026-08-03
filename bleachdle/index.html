@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bleachdle</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Bleachdle</h1>
+    <p class="subtitle">Devine le personnage Bleach du jour.</p>
+  </header>
+
+  <main>
+    <div class="search-box">
+      <input
+        id="guessInput"
+        type="text"
+        autocomplete="off"
+        placeholder="Nom d'un personnage..."
+      />
+      <div id="suggestions" class="suggestions" hidden></div>
+    </div>
+
+    <p id="attemptsLeft" class="attempts"></p>
+    <p id="message" class="message"></p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr id="headerRow"></tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <section class="legend">
+      <span class="legend-item"><span class="swatch correct"></span> Identique</span>
+      <span class="legend-item"><span class="swatch partial"></span> Partiel</span>
+      <span class="legend-item"><span class="swatch incorrect"></span> Différent</span>
+      <span class="legend-item">▲ / ▼ = indice plus haut / plus bas</span>
+    </section>
+  </main>
+
+  <script src="characters.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
