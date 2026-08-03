@@ -155,19 +155,23 @@ function renderGuessRow(guessChar) {
     const result = compareAttribute(attr, guessChar, target);
     const cell = document.createElement("td");
     cell.className = `cell ${result.state}`;
+    cell.dataset.label = attr.label;
+    const valueWrap = document.createElement("span");
+    valueWrap.className = "value-wrap";
     const valueSpan = document.createElement("span");
     valueSpan.textContent = formatValue(attr, guessChar);
-    cell.appendChild(valueSpan);
+    valueWrap.appendChild(valueSpan);
     if (result.direction) {
       const arrow = document.createElement("span");
       arrow.className = "arrow";
       arrow.textContent = result.direction === "up" ? "▲" : "▼";
-      cell.appendChild(arrow);
+      valueWrap.appendChild(arrow);
     }
+    cell.appendChild(valueWrap);
     row.appendChild(cell);
   }
 
-  resultsBody.appendChild(row);
+  resultsBody.prepend(row);
 }
 
 function updateAttemptsLeft() {
