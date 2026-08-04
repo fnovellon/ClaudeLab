@@ -18,6 +18,8 @@ const ATTRIBUTES = [
   { key: "affiliation", label: "Affiliation", type: "array" },
   { key: "gender", label: "Genre", type: "exact" },
   { key: "status", label: "Statut", type: "exact" },
+  { key: "location", label: "Localisation", type: "exact" },
+  { key: "age", label: "Âge", type: "numeric" },
   { key: "rank", label: "Escouade / Rang", type: "numeric" },
   { key: "powerType", label: "Pouvoir", type: "exact" },
   { key: "bankaiOrResurreccion", label: "Bankai / Resurrección", type: "exact" },

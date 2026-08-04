@@ -19,8 +19,8 @@ serveur statique, ex. `npx serve .`).
    - **orange** : partiellement correct (ex : personnages hybrides qui
      partagent une race ou une affiliation avec le personnage secret)
    - **gris** : différent, avec une flèche ▲/▼ pour les attributs numériques
-     ou chronologiques (taille, escouade/rang, premier arc) indiquant si la
-     bonne réponse est plus grande/petite ou antérieure/postérieure.
+     ou chronologiques (taille, âge, escouade/rang, premier arc) indiquant si
+     la bonne réponse est plus grande/petite ou antérieure/postérieure.
 3. La partie se termine par une victoire (bon personnage trouvé) ou une
    défaite (8 tentatives épuisées) ; le résultat du jour est sauvegardé dans
    le navigateur (`localStorage`) pour éviter de rejouer plusieurs fois le
@@ -32,7 +32,10 @@ serveur statique, ex. `npx serve .`).
   `characters.js` (le dataset) puis `game.js` (la logique).
 - Le personnage du jour est calculé à partir de la date UTC courante, donc
   identique pour tout le monde le même jour.
-- Le dataset couvre une quarantaine de personnages majeurs de Bleach, avec
-  des attributs curés à la main (race, affiliation, genre, statut, escouade/
-  rang, type de pouvoir, Bankai/Resurrección, taille, premier arc
-  d'apparition, couleur de cheveux).
+- Le dataset couvre une soixantaine de personnages majeurs de Bleach, avec
+  des attributs curés à la main (race, affiliation, genre, statut,
+  localisation, âge, escouade/rang, type de pouvoir, Bankai/Resurrección,
+  taille, premier arc d'apparition, couleur de cheveux).
+- L'âge indiqué est l'âge apparent/physique du personnage, pas son âge
+  chronologique réel (de nombreux Shinigami sont canoniquement centenaires,
+  voire millénaires).
