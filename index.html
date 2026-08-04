@@ -9,10 +9,15 @@
 <body>
   <header>
     <h1>Bleachdle</h1>
-    <p class="subtitle">Devine le personnage Bleach du jour.</p>
+    <p class="subtitle" id="subtitle">Devine le personnage Bleach du jour.</p>
   </header>
 
   <main>
+    <div class="mode-toggle" role="tablist">
+      <button id="dailyModeBtn" class="mode-btn active" type="button">Défi du jour</button>
+      <button id="infiniteModeBtn" class="mode-btn" type="button">Illimité</button>
+    </div>
+
     <div class="search-box">
       <input
         id="guessInput"
@@ -22,6 +27,8 @@
       />
       <div id="suggestions" class="suggestions" hidden></div>
     </div>
+
+    <button id="newGameBtn" class="new-game-btn" type="button" hidden>Nouvelle partie</button>
 
     <p id="attemptsLeft" class="attempts"></p>
     <p id="message" class="message"></p>
@@ -43,6 +50,9 @@
     </section>
   </main>
 
+  <footer id="versionTag" class="version-tag"></footer>
+
+  <script src="version.js"></script>
   <script src="characters.js"></script>
   <script src="game.js"></script>
 </body>

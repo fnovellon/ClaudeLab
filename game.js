@@ -118,10 +118,19 @@ function saveState(state) {
   localStorage.setItem(storageKey(), JSON.stringify(state));
 }
 
+function pickRandomCharacter(excludeName) {
+  let pool = CHARACTERS;
+  if (excludeName && CHARACTERS.length > 1) {
+    pool = CHARACTERS.filter((c) => c.name !== excludeName);
+  }
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 // --- UI ---
 
-const target = getDailyCharacter();
-let state = loadState();
+let mode = "daily";
+let target = null;
+let state = { guesses: [], finished: false, won: false };
 
 const guessInput = document.getElementById("guessInput");
 const suggestionsEl = document.getElementById("suggestions");
@@ -129,6 +138,11 @@ const resultsBody = document.getElementById("resultsBody");
 const attemptsLeftEl = document.getElementById("attemptsLeft");
 const messageEl = document.getElementById("message");
 const headerRow = document.getElementById("headerRow");
+const subtitleEl = document.getElementById("subtitle");
+const dailyModeBtn = document.getElementById("dailyModeBtn");
+const infiniteModeBtn = document.getElementById("infiniteModeBtn");
+const newGameBtn = document.getElementById("newGameBtn");
+const versionTagEl = document.getElementById("versionTag");
 
 function buildHeader() {
   const nameTh = document.createElement("th");
@@ -184,7 +198,7 @@ function updateAttemptsLeft() {
 function endGame(won) {
   state.finished = true;
   state.won = won;
-  saveState(state);
+  if (mode === "daily") saveState(state);
   guessInput.disabled = true;
   messageEl.className = won ? "message win" : "message lose";
   messageEl.textContent = won
@@ -206,7 +220,7 @@ function submitGuess(name) {
     endGame(true);
   } else if (state.guesses.length >= MAX_ATTEMPTS) {
     endGame(false);
-  } else {
+  } else if (mode === "daily") {
     saveState(state);
   }
 
@@ -256,6 +270,45 @@ function replayState() {
   }
 }
 
+function resetBoard() {
+  resultsBody.innerHTML = "";
+  guessInput.value = "";
+  guessInput.disabled = false;
+  messageEl.className = "message";
+  messageEl.textContent = "";
+  suggestionsEl.hidden = true;
+}
+
+function startDailyMode() {
+  target = getDailyCharacter();
+  state = loadState();
+  resetBoard();
+  replayState();
+}
+
+function startInfiniteMode() {
+  target = pickRandomCharacter(target ? target.name : null);
+  state = { guesses: [], finished: false, won: false };
+  resetBoard();
+  updateAttemptsLeft();
+}
+
+function setMode(newMode) {
+  mode = newMode;
+  dailyModeBtn.classList.toggle("active", mode === "daily");
+  infiniteModeBtn.classList.toggle("active", mode === "infinite");
+  newGameBtn.hidden = mode !== "infinite";
+  subtitleEl.textContent =
+    mode === "daily"
+      ? "Devine le personnage Bleach du jour."
+      : "Devine le personnage Bleach — partie illimitée.";
+  if (mode === "daily") {
+    startDailyMode();
+  } else {
+    startInfiniteMode();
+  }
+}
+
 guessInput.addEventListener("input", renderSuggestions);
 guessInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
@@ -270,5 +323,10 @@ document.addEventListener("click", (e) => {
   if (e.target !== guessInput) suggestionsEl.hidden = true;
 });
 
+dailyModeBtn.addEventListener("click", () => setMode("daily"));
+infiniteModeBtn.addEventListener("click", () => setMode("infinite"));
+newGameBtn.addEventListener("click", () => startInfiniteMode());
+
 buildHeader();
-replayState();
+if (versionTagEl) versionTagEl.textContent = `v${APP_VERSION}`;
+setMode("daily");

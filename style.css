@@ -50,6 +50,49 @@ main {
   align-items: center;
 }
 
+.mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.mode-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.new-game-btn {
+  margin-top: 0.75rem;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.new-game-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 .search-box {
   position: relative;
   width: 100%;
@@ -267,4 +310,11 @@ th {
 
 .swatch.incorrect {
   background: var(--incorrect);
+}
+
+.version-tag {
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  opacity: 0.7;
 }
