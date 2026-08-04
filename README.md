@@ -45,9 +45,17 @@ serveur statique, ex. `npx serve .`).
 - Le numéro de version affiché en bas de page (`version.js`, constante
   `APP_VERSION`) est incrémenté de 1 à chaque commit sur le jeu.
 - Le dataset couvre une soixantaine de personnages majeurs de Bleach, avec
-  des attributs curés à la main (race, affiliation, genre, statut,
-  localisation, âge, escouade/rang, type de pouvoir, Bankai/Resurrección,
-  taille, premier arc d'apparition, couleur de cheveux).
-- L'âge indiqué est l'âge apparent/physique du personnage, pas son âge
-  chronologique réel (de nombreux Shinigami sont canoniquement centenaires,
-  voire millénaires).
+  des attributs curés à la main et vérifiés via recherche web (race,
+  affiliation, genre, statut, localisation, âge, escouade/rang, type de
+  pouvoir, Bankai/Resurrección, taille, premier arc d'apparition, couleur de
+  cheveux). Le Bleach Fandom Wiki n'étant pas accessible directement depuis
+  cet environnement, certaines valeurs restent basées sur des sources
+  secondaires recoupées plutôt que sur une lecture directe du wiki — il peut
+  donc subsister des approximations.
+- L'âge est l'âge canoniquement documenté dans le manga/les databooks
+  officiels. Pour la plupart des Shinigami, Arrancar et Quincy adultes, cet
+  âge n'est officiellement jamais précisé ("Inconnu" affiché dans le jeu) —
+  leur apparence physique ne reflète pas leur âge réel, souvent centenaire
+  voire millénaire. Quand un âge extrême est explicitement mentionné dans
+  l'histoire (ex : Yamamoto, Yhwach), il est indiqué tel quel plutôt que
+  laissé "Inconnu".

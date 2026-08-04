@@ -19,7 +19,7 @@ const ATTRIBUTES = [
   { key: "gender", label: "Genre", type: "exact" },
   { key: "status", label: "Statut", type: "exact" },
   { key: "location", label: "Localisation", type: "exact" },
-  { key: "age", label: "Âge", type: "numeric" },
+  { key: "age", label: "Âge", type: "age" },
   { key: "rank", label: "Escouade / Rang", type: "numeric" },
   { key: "powerType", label: "Pouvoir", type: "exact" },
   { key: "bankaiOrResurreccion", label: "Bankai / Resurrección", type: "exact" },
@@ -69,6 +69,15 @@ function compareNumeric(guessVal, targetVal) {
   return { state: "incorrect", direction: targetVal > guessVal ? "up" : "down" };
 }
 
+// Contrairement à "rank" où null signifie "pas de rang" (donc null === null est un vrai
+// match), pour "age" null signifie "âge non documenté canoniquement" : on ne peut pas
+// affirmer que deux âges inconnus sont identiques.
+function compareAge(guessVal, targetVal) {
+  if (guessVal === null || targetVal === null) return { state: "incorrect" };
+  if (guessVal === targetVal) return { state: "correct" };
+  return { state: "incorrect", direction: targetVal > guessVal ? "up" : "down" };
+}
+
 function compareArc(guessVal, targetVal) {
   if (guessVal === targetVal) return { state: "correct" };
   const gi = ARC_ORDER.indexOf(guessVal);
@@ -84,6 +93,8 @@ function compareAttribute(attr, guessChar, targetChar) {
       return compareArray(guessVal, targetVal);
     case "numeric":
       return compareNumeric(guessVal, targetVal);
+    case "age":
+      return compareAge(guessVal, targetVal);
     case "arc":
       return compareArc(guessVal, targetVal);
     default:
@@ -93,7 +104,7 @@ function compareAttribute(attr, guessChar, targetChar) {
 
 function formatValue(attr, char) {
   const val = char[attr.key];
-  if (val === null || val === undefined) return "N/A";
+  if (val === null || val === undefined) return attr.type === "age" ? "Inconnu" : "N/A";
   if (Array.isArray(val)) return val.join(" / ");
   return String(val);
 }
