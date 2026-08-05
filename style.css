@@ -220,7 +220,7 @@ td {
   word-break: break-word;
 }
 
-@media (min-width: 641px) {
+@media (min-width: 1080px) {
   th:nth-child(1), td:nth-child(1) { width: 11%; }
   th:nth-child(2), td:nth-child(2) { width: 9%; }
   th:nth-child(3), td:nth-child(3) { width: 9%; }
@@ -236,9 +236,14 @@ td {
   th:nth-child(13), td:nth-child(13) { width: 7%; }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1079px) {
   thead {
     display: none;
+  }
+
+  .table-wrapper {
+    max-width: 560px;
+    margin: 0 auto;
   }
 
   table,
