@@ -52,10 +52,10 @@ serveur statique, ex. `npx serve .`).
   cet environnement, certaines valeurs restent basées sur des sources
   secondaires recoupées plutôt que sur une lecture directe du wiki — il peut
   donc subsister des approximations.
-- L'âge est l'âge canoniquement documenté dans le manga/les databooks
-  officiels. Pour la plupart des Shinigami, Arrancar et Quincy adultes, cet
-  âge n'est officiellement jamais précisé ("Inconnu" affiché dans le jeu) —
-  leur apparence physique ne reflète pas leur âge réel, souvent centenaire
-  voire millénaire. Quand un âge extrême est explicitement mentionné dans
-  l'histoire (ex : Yamamoto, Yhwach), il est indiqué tel quel plutôt que
-  laissé "Inconnu".
+- L'âge est représenté par une **tranche** (Enfant < Adolescent < Jeune
+  adulte < Adulte < Centenaire < Millénaire) plutôt qu'un chiffre précis :
+  la plupart des Shinigami/Arrancar/Quincy adultes ont un âge réel jamais
+  documenté dans les databooks, et leur apparence physique ne reflète pas
+  cet âge réel (certains sont centenaires, voire millénaires). La tranche
+  survit à cette incertitude — contrairement à un chiffre exact, elle reste
+  vraie même quand l'âge précis n'est pas connu.

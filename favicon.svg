@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>Bleachdle</title>
+  <rect width="128" height="128" rx="24" fill="#14161c" />
+
+  <!-- Collier du shihakusho -->
+  <path d="M40 118 L64 96 L88 118 Z" fill="#0b0c10" />
+  <path d="M50 118 L64 104 L78 118 Z" fill="#f4f4f6" />
+
+  <!-- Cou -->
+  <rect x="54" y="86" width="20" height="20" rx="6" fill="#f0c199" />
+
+  <!-- Crâne chauve -->
+  <circle cx="64" cy="58" r="38" fill="#f2c9a0" />
+
+  <!-- Reflet de calvitie -->
+  <ellipse cx="50" cy="34" rx="14" ry="8" fill="#ffffff" opacity="0.35" transform="rotate(-20 50 34)" />
+
+  <!-- Oreilles -->
+  <circle cx="24" cy="60" r="7" fill="#f2c9a0" />
+  <circle cx="104" cy="60" r="7" fill="#f2c9a0" />
+
+  <!-- Sourcils, froncés façon Ichigo -->
+  <path d="M32 50 Q44 38 56 46 L54 52 Q43 46 34 56 Z" fill="#e8622c" />
+  <path d="M96 50 Q84 38 72 46 L74 52 Q85 46 94 56 Z" fill="#e8622c" />
+
+  <!-- Yeux -->
+  <path d="M38 60 Q45 56 52 60 Q45 64 38 60 Z" fill="#1d2029" />
+  <path d="M90 60 Q83 56 76 60 Q83 64 90 60 Z" fill="#1d2029" />
+
+  <!-- Bouche, moue sérieuse -->
+  <path d="M54 80 Q64 76 74 80" stroke="#8a4a2e" stroke-width="3" fill="none" stroke-linecap="round" />
+</svg>

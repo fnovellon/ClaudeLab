@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bleachdle</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div id="victoryAnim" class="victory-anim" aria-hidden="true"></div>
+
   <header>
+    <img src="favicon.svg" alt="" class="logo" width="56" height="56" />
     <h1>Bleachdle</h1>
     <p class="subtitle" id="subtitle">Devine le personnage Bleach du jour.</p>
   </header>
@@ -47,6 +51,7 @@
       <span class="legend-item"><span class="swatch partial"></span> Partiel</span>
       <span class="legend-item"><span class="swatch incorrect"></span> Différent</span>
       <span class="legend-item">▲ / ▼ = indice plus haut / plus bas</span>
+      <span class="legend-item" title="Enfant &lt; Adolescent &lt; Jeune adulte &lt; Adulte &lt; Centenaire &lt; Millénaire">Âge = tranche (survolez l'en-tête "Âge" du tableau)</span>
     </section>
   </main>
 

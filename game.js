@@ -13,18 +13,28 @@ const ARC_ORDER = [
   "Guerre Sanglante des Mille Ans",
 ];
 
+// Tranches d'âge, de la plus jeune à la plus âgée. On utilise une tranche plutôt qu'un
+// chiffre précis : la plupart des Shinigami/Arrancar/Quincy adultes ont un âge réel jamais
+// documenté dans les databooks (leur apparence ne reflète pas leur âge réel), donc un
+// chiffre exact serait soit inventé, soit toujours "Inconnu". La tranche reste vraie même
+// pour les personnages centenaires/millénaires dont l'apparence est trompeuse.
+const AGE_BRACKET_ORDER = ["Enfant", "Adolescent", "Jeune adulte", "Adulte", "Centenaire", "Millénaire"];
+const AGE_BRACKET_TITLE =
+  "Enfant (< 13 ans) < Adolescent (13-19) < Jeune adulte (20-39) < Adulte (40-59) " +
+  "< Centenaire (100+ ans réels) < Millénaire (1000+ ans réels)";
+
 const ATTRIBUTES = [
   { key: "race", label: "Race", type: "array" },
   { key: "affiliation", label: "Affiliation", type: "array" },
   { key: "gender", label: "Genre", type: "exact" },
   { key: "status", label: "Statut", type: "exact" },
-  { key: "location", label: "Localisation", type: "exact" },
-  { key: "age", label: "Âge", type: "age" },
-  { key: "rank", label: "Escouade / Rang", type: "numeric" },
+  { key: "location", label: "Lieu", type: "exact" },
+  { key: "ageBracket", label: "Âge", type: "ageBracket", title: AGE_BRACKET_TITLE },
+  { key: "rank", label: "Rang", type: "numeric" },
   { key: "powerType", label: "Pouvoir", type: "exact" },
-  { key: "bankaiOrResurreccion", label: "Bankai / Resurrección", type: "exact" },
-  { key: "height", label: "Taille (cm)", type: "numeric" },
-  { key: "firstArc", label: "Premier arc", type: "arc" },
+  { key: "bankaiOrResurreccion", label: "Bankai/Rés.", type: "exact" },
+  { key: "height", label: "Taille", type: "numeric" },
+  { key: "firstArc", label: "1er arc", type: "arc" },
   { key: "hairColor", label: "Cheveux", type: "exact" },
 ];
 
@@ -69,20 +79,19 @@ function compareNumeric(guessVal, targetVal) {
   return { state: "incorrect", direction: targetVal > guessVal ? "up" : "down" };
 }
 
-// Contrairement à "rank" où null signifie "pas de rang" (donc null === null est un vrai
-// match), pour "age" null signifie "âge non documenté canoniquement" : on ne peut pas
-// affirmer que deux âges inconnus sont identiques.
-function compareAge(guessVal, targetVal) {
-  if (guessVal === null || targetVal === null) return { state: "incorrect" };
+function compareOrdinal(guessVal, targetVal, order) {
   if (guessVal === targetVal) return { state: "correct" };
-  return { state: "incorrect", direction: targetVal > guessVal ? "up" : "down" };
+  const gi = order.indexOf(guessVal);
+  const ti = order.indexOf(targetVal);
+  return { state: "incorrect", direction: ti > gi ? "up" : "down" };
 }
 
 function compareArc(guessVal, targetVal) {
-  if (guessVal === targetVal) return { state: "correct" };
-  const gi = ARC_ORDER.indexOf(guessVal);
-  const ti = ARC_ORDER.indexOf(targetVal);
-  return { state: "incorrect", direction: ti > gi ? "up" : "down" };
+  return compareOrdinal(guessVal, targetVal, ARC_ORDER);
+}
+
+function compareAgeBracket(guessVal, targetVal) {
+  return compareOrdinal(guessVal, targetVal, AGE_BRACKET_ORDER);
 }
 
 function compareAttribute(attr, guessChar, targetChar) {
@@ -93,8 +102,8 @@ function compareAttribute(attr, guessChar, targetChar) {
       return compareArray(guessVal, targetVal);
     case "numeric":
       return compareNumeric(guessVal, targetVal);
-    case "age":
-      return compareAge(guessVal, targetVal);
+    case "ageBracket":
+      return compareAgeBracket(guessVal, targetVal);
     case "arc":
       return compareArc(guessVal, targetVal);
     default:
@@ -104,7 +113,7 @@ function compareAttribute(attr, guessChar, targetChar) {
 
 function formatValue(attr, char) {
   const val = char[attr.key];
-  if (val === null || val === undefined) return attr.type === "age" ? "Inconnu" : "N/A";
+  if (val === null || val === undefined) return "N/A";
   if (Array.isArray(val)) return val.join(" / ");
   return String(val);
 }
@@ -162,6 +171,7 @@ function buildHeader() {
   for (const attr of ATTRIBUTES) {
     const th = document.createElement("th");
     th.textContent = attr.label;
+    if (attr.title) th.title = attr.title;
     headerRow.appendChild(th);
   }
 }
@@ -206,6 +216,28 @@ function updateAttemptsLeft() {
   attemptsLeftEl.textContent = `Essais restants : ${Math.max(remaining, 0)}`;
 }
 
+const VICTORY_EMOJIS = ["⚔️", "👺"];
+const VICTORY_PARTICLE_COUNT = 24;
+
+function triggerVictoryAnimation() {
+  const container = document.getElementById("victoryAnim");
+  if (!container) return;
+  container.innerHTML = "";
+  for (let i = 0; i < VICTORY_PARTICLE_COUNT; i++) {
+    const span = document.createElement("span");
+    span.className = "victory-particle";
+    span.textContent = VICTORY_EMOJIS[Math.floor(Math.random() * VICTORY_EMOJIS.length)];
+    span.style.left = `${Math.random() * 100}%`;
+    span.style.fontSize = `${1.2 + Math.random() * 1.3}rem`;
+    span.style.animationDuration = `${1.6 + Math.random() * 1.2}s`;
+    span.style.animationDelay = `${Math.random() * 0.5}s`;
+    container.appendChild(span);
+  }
+  window.setTimeout(() => {
+    container.innerHTML = "";
+  }, 3200);
+}
+
 function endGame(won) {
   state.finished = true;
   state.won = won;
@@ -215,6 +247,7 @@ function endGame(won) {
   messageEl.textContent = won
     ? `Bravo ! Le personnage était bien ${target.name}.`
     : `Perdu ! Le personnage à trouver était ${target.name}.`;
+  if (won) triggerVictoryAnimation();
 }
 
 function submitGuess(name) {
@@ -238,6 +271,7 @@ function submitGuess(name) {
   guessInput.value = "";
   suggestionsEl.innerHTML = "";
   suggestionsEl.hidden = true;
+  if (!guessInput.disabled) guessInput.focus();
 }
 
 function renderSuggestions() {

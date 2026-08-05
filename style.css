@@ -29,6 +29,14 @@ body {
 header {
   text-align: center;
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo {
+  border-radius: 14px;
+  margin-bottom: 0.5rem;
 }
 
 h1 {
@@ -44,7 +52,7 @@ h1 {
 
 main {
   width: 100%;
-  max-width: 960px;
+  max-width: 1040px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -147,10 +155,44 @@ main {
 
 .message.win {
   color: var(--correct);
+  animation: winPulse 0.6s ease;
+}
+
+@keyframes winPulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.18); }
+  100% { transform: scale(1); }
 }
 
 .message.lose {
   color: #e05c5c;
+}
+
+.victory-anim {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.victory-particle {
+  position: absolute;
+  top: -10%;
+  animation-name: victoryFall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+
+@keyframes victoryFall {
+  from {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(115vh) rotate(360deg);
+    opacity: 0;
+  }
 }
 
 .table-wrapper {
@@ -175,19 +217,19 @@ td {
 }
 
 @media (min-width: 641px) {
-  th:nth-child(1), td:nth-child(1) { width: 12%; }
-  th:nth-child(2), td:nth-child(2) { width: 10%; }
-  th:nth-child(3), td:nth-child(3) { width: 10%; }
+  th:nth-child(1), td:nth-child(1) { width: 11%; }
+  th:nth-child(2), td:nth-child(2) { width: 9%; }
+  th:nth-child(3), td:nth-child(3) { width: 9%; }
   th:nth-child(4), td:nth-child(4) { width: 5%; }
   th:nth-child(5), td:nth-child(5) { width: 6%; }
-  th:nth-child(6), td:nth-child(6) { width: 9%; }
-  th:nth-child(7), td:nth-child(7) { width: 5%; }
-  th:nth-child(8), td:nth-child(8) { width: 7%; }
+  th:nth-child(6), td:nth-child(6) { width: 8%; }
+  th:nth-child(7), td:nth-child(7) { width: 9%; }
+  th:nth-child(8), td:nth-child(8) { width: 6%; }
   th:nth-child(9), td:nth-child(9) { width: 9%; }
   th:nth-child(10), td:nth-child(10) { width: 8%; }
   th:nth-child(11), td:nth-child(11) { width: 5%; }
-  th:nth-child(12), td:nth-child(12) { width: 9%; }
-  th:nth-child(13), td:nth-child(13) { width: 5%; }
+  th:nth-child(12), td:nth-child(12) { width: 8%; }
+  th:nth-child(13), td:nth-child(13) { width: 7%; }
 }
 
 @media (max-width: 640px) {
