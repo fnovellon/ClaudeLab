@@ -20,7 +20,7 @@ const ATTRIBUTES = [
   { key: "status", label: "Statut", type: "exact" },
   { key: "location", label: "Lieu", type: "exact" },
   { key: "age", label: "Âge", type: "ageRange" },
-  { key: "rank", label: "Rang", type: "numeric" },
+  { key: "rank", label: "Escouade / Rang", type: "numeric" },
   { key: "powerType", label: "Pouvoir", type: "exact" },
   { key: "bankaiOrResurreccion", label: "Bankai/Rés.", type: "exact" },
   { key: "height", label: "Taille", type: "numeric" },
