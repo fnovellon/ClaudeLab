@@ -13,23 +13,13 @@ const ARC_ORDER = [
   "Guerre Sanglante des Mille Ans",
 ];
 
-// Tranches d'âge, de la plus jeune à la plus âgée. On utilise une tranche plutôt qu'un
-// chiffre précis : la plupart des Shinigami/Arrancar/Quincy adultes ont un âge réel jamais
-// documenté dans les databooks (leur apparence ne reflète pas leur âge réel), donc un
-// chiffre exact serait soit inventé, soit toujours "Inconnu". La tranche reste vraie même
-// pour les personnages centenaires/millénaires dont l'apparence est trompeuse.
-const AGE_BRACKET_ORDER = ["Enfant", "Adolescent", "Jeune adulte", "Adulte", "Centenaire", "Millénaire"];
-const AGE_BRACKET_TITLE =
-  "Enfant (< 13 ans) < Adolescent (13-19) < Jeune adulte (20-39) < Adulte (40-59) " +
-  "< Centenaire (100+ ans réels) < Millénaire (1000+ ans réels)";
-
 const ATTRIBUTES = [
   { key: "race", label: "Race", type: "array" },
   { key: "affiliation", label: "Affiliation", type: "array" },
   { key: "gender", label: "Genre", type: "exact" },
   { key: "status", label: "Statut", type: "exact" },
   { key: "location", label: "Lieu", type: "exact" },
-  { key: "ageBracket", label: "Âge", type: "ageBracket", title: AGE_BRACKET_TITLE },
+  { key: "age", label: "Âge", type: "ageRange" },
   { key: "rank", label: "Rang", type: "numeric" },
   { key: "powerType", label: "Pouvoir", type: "exact" },
   { key: "bankaiOrResurreccion", label: "Bankai/Rés.", type: "exact" },
@@ -90,8 +80,16 @@ function compareArc(guessVal, targetVal) {
   return compareOrdinal(guessVal, targetVal, ARC_ORDER);
 }
 
-function compareAgeBracket(guessVal, targetVal) {
-  return compareOrdinal(guessVal, targetVal, AGE_BRACKET_ORDER);
+// "age" est { min, max } : min===max pour un âge exact confirmé, max===null pour un âge
+// minimum confirmé sans plafond ("2 100+ ans"), sinon une plage estimée ("100-500 ans") quand
+// l'âge réel n'est jamais documenté. Deux plages ne matchent que si elles sont identiques ;
+// la flèche haut/bas compare les bornes basses (min), un repère raisonnable dans tous les cas.
+function compareAgeRange(guessVal, targetVal) {
+  if (guessVal.min === targetVal.min && guessVal.max === targetVal.max) {
+    return { state: "correct" };
+  }
+  if (targetVal.min === guessVal.min) return { state: "incorrect" };
+  return { state: "incorrect", direction: targetVal.min > guessVal.min ? "up" : "down" };
 }
 
 function compareAttribute(attr, guessChar, targetChar) {
@@ -102,8 +100,8 @@ function compareAttribute(attr, guessChar, targetChar) {
       return compareArray(guessVal, targetVal);
     case "numeric":
       return compareNumeric(guessVal, targetVal);
-    case "ageBracket":
-      return compareAgeBracket(guessVal, targetVal);
+    case "ageRange":
+      return compareAgeRange(guessVal, targetVal);
     case "arc":
       return compareArc(guessVal, targetVal);
     default:
@@ -111,8 +109,15 @@ function compareAttribute(attr, guessChar, targetChar) {
   }
 }
 
+function formatAgeRange(val) {
+  if (val.max === null) return `${val.min}+ ans`;
+  if (val.min === val.max) return `${val.min} ans`;
+  return `${val.min}-${val.max} ans`;
+}
+
 function formatValue(attr, char) {
   const val = char[attr.key];
+  if (attr.type === "ageRange") return formatAgeRange(val);
   if (val === null || val === undefined) return "N/A";
   if (Array.isArray(val)) return val.join(" / ");
   return String(val);

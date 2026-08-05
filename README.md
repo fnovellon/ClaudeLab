@@ -45,17 +45,18 @@ serveur statique, ex. `npx serve .`).
 - Le numéro de version affiché en bas de page (`version.js`, constante
   `APP_VERSION`) est incrémenté de 1 à chaque commit sur le jeu.
 - Le dataset couvre une soixantaine de personnages majeurs de Bleach, avec
-  des attributs curés à la main et vérifiés via recherche web (race,
-  affiliation, genre, statut, localisation, âge, escouade/rang, type de
-  pouvoir, Bankai/Resurrección, taille, premier arc d'apparition, couleur de
-  cheveux). Le Bleach Fandom Wiki n'étant pas accessible directement depuis
-  cet environnement, certaines valeurs restent basées sur des sources
-  secondaires recoupées plutôt que sur une lecture directe du wiki — il peut
-  donc subsister des approximations.
-- L'âge est représenté par une **tranche** (Enfant < Adolescent < Jeune
-  adulte < Adulte < Centenaire < Millénaire) plutôt qu'un chiffre précis :
-  la plupart des Shinigami/Arrancar/Quincy adultes ont un âge réel jamais
-  documenté dans les databooks, et leur apparence physique ne reflète pas
-  cet âge réel (certains sont centenaires, voire millénaires). La tranche
-  survit à cette incertitude — contrairement à un chiffre exact, elle reste
-  vraie même quand l'âge précis n'est pas connu.
+  des attributs curés à la main (race, affiliation, genre, statut,
+  localisation, âge, escouade/rang, type de pouvoir, Bankai/Resurrección,
+  taille, premier arc d'apparition, couleur de cheveux). Vérifié via
+  recherche web, puis recoupé avec un export local des infobox du Bleach
+  Fandom Wiki (taille, rang/division, Bankai/Resurrección, âge quand
+  disponible) — plus fiable que la recherche web seule, mais toujours pas
+  une lecture exhaustive du wiki : il peut subsister des approximations,
+  notamment sur les quelques entrées où le scrape a renvoyé la fiche d'un
+  autre personnage par erreur.
+- L'âge est soit une valeur exacte confirmée ("15 ans"), soit une valeur
+  minimale confirmée sans plafond ("2100+ ans" pour Yamamoto), soit une
+  plage estimée honnête ("100-500 ans") quand l'âge réel n'est jamais
+  documenté — ce qui est le cas de la plupart des Shinigami/Arrancar
+  adultes, dont l'apparence physique ne reflète pas l'âge réel. Deux
+  personnages ne matchent sur l'âge que si leur valeur/plage est identique.
