@@ -219,23 +219,22 @@ td {
   font-size: 0.78rem;
   white-space: normal;
   overflow-wrap: break-word;
-  word-break: break-word;
 }
 
 @media (min-width: 1080px) {
-  th:nth-child(1), td:nth-child(1) { width: 11%; }
-  th:nth-child(2), td:nth-child(2) { width: 9%; }
+  th:nth-child(1), td:nth-child(1) { width: 9%; }
+  th:nth-child(2), td:nth-child(2) { width: 8%; }
   th:nth-child(3), td:nth-child(3) { width: 8%; }
-  th:nth-child(4), td:nth-child(4) { width: 5%; }
-  th:nth-child(5), td:nth-child(5) { width: 6%; }
+  th:nth-child(4), td:nth-child(4) { width: 7%; }
+  th:nth-child(5), td:nth-child(5) { width: 7%; }
   th:nth-child(6), td:nth-child(6) { width: 8%; }
   th:nth-child(7), td:nth-child(7) { width: 9%; }
-  th:nth-child(8), td:nth-child(8) { width: 10%; }
-  th:nth-child(9), td:nth-child(9) { width: 8%; }
+  th:nth-child(8), td:nth-child(8) { width: 9%; }
+  th:nth-child(9), td:nth-child(9) { width: 7%; }
   th:nth-child(10), td:nth-child(10) { width: 8%; }
   th:nth-child(11), td:nth-child(11) { width: 5%; }
-  th:nth-child(12), td:nth-child(12) { width: 8%; }
-  th:nth-child(13), td:nth-child(13) { width: 5%; }
+  th:nth-child(12), td:nth-child(12) { width: 7%; }
+  th:nth-child(13), td:nth-child(13) { width: 8%; }
 }
 
 @media (max-width: 1079px) {
