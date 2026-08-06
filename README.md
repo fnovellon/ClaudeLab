@@ -18,8 +18,11 @@ serveur statique, ex. `npx serve .`).
 ### Comment jouer
 
 1. Choisir le mode "Défi du jour" ou "Illimité" en haut de la page.
-2. Taper le nom d'un personnage dans le champ de recherche et choisir une
-   suggestion (ou valider avec Entrée si le nom est exact).
+2. Taper le nom d'un personnage dans le champ de recherche (les accents sont
+   ignorés, ex. "toshiro" trouve "Tōshirō"). Naviguer dans les suggestions
+   avec les flèches ↑/↓ ou la souris, puis valider avec Entrée ou un clic —
+   Entrée valide la suggestion surlignée même si le texte tapé n'est pas
+   exact.
 3. Après chaque tentative, chaque attribut du personnage proposé s'affiche :
    - **vert** : identique au personnage à trouver
    - **orange** : partiellement correct (ex : personnages hybrides qui
@@ -54,9 +57,11 @@ serveur statique, ex. `npx serve .`).
   une lecture exhaustive du wiki : il peut subsister des approximations,
   notamment sur les quelques entrées où le scrape a renvoyé la fiche d'un
   autre personnage par erreur.
-- L'âge est soit une valeur exacte confirmée ("15 ans"), soit une valeur
-  minimale confirmée sans plafond ("2100+ ans" pour Yamamoto), soit une
-  plage estimée honnête ("100-500 ans") quand l'âge réel n'est jamais
-  documenté — ce qui est le cas de la plupart des Shinigami/Arrancar
-  adultes, dont l'apparence physique ne reflète pas l'âge réel. Deux
-  personnages ne matchent sur l'âge que si leur valeur/plage est identique.
+- L'âge est représenté par une **tranche fixe** ("10-20 ans" < "20-50 ans" <
+  "50-100 ans" < "100-150 ans" < "150-1000 ans" < "1000+ ans") plutôt qu'un
+  chiffre précis : la plupart des Shinigami/Arrancar adultes ont un âge réel
+  jamais documenté (leur apparence ne reflète pas leur âge réel), donc
+  chacun est classé dans la tranche la plus honnête possible. Deux
+  personnages ne matchent sur l'âge que s'ils sont dans la même tranche,
+  avec une flèche ▲/▼ indiquant si la bonne réponse est dans une tranche
+  plus jeune ou plus âgée.

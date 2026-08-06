@@ -13,13 +13,20 @@ const ARC_ORDER = [
   "Guerre Sanglante des Mille Ans",
 ];
 
+// Tranches d'âge fixes, de la plus jeune à la plus âgée. L'âge réel de la plupart des
+// Shinigami/Arrancar/Quincy adultes n'est jamais documenté (leur apparence ne reflète pas leur
+// âge réel), donc plutôt qu'un chiffre inventé on classe chacun dans une tranche large. Quand un
+// âge minimum est explicitement confirmé dans l'histoire (ex : Yamamoto, Yhwach), le personnage
+// est placé dans la tranche correspondante.
+const AGE_BRACKET_ORDER = ["10-20 ans", "20-50 ans", "50-100 ans", "100-150 ans", "150-1000 ans", "1000+ ans"];
+
 const ATTRIBUTES = [
   { key: "race", label: "Race", type: "array" },
   { key: "affiliation", label: "Affiliation", type: "array" },
   { key: "gender", label: "Genre", type: "exact" },
   { key: "status", label: "Statut", type: "exact" },
   { key: "location", label: "Lieu", type: "exact" },
-  { key: "age", label: "Âge", type: "ageRange" },
+  { key: "ageBracket", label: "Âge", type: "ageBracket" },
   { key: "rank", label: "Escouade / Rang", type: "numeric" },
   { key: "powerType", label: "Pouvoir", type: "exact" },
   { key: "bankaiOrResurreccion", label: "Bankai/Rés.", type: "exact" },
@@ -80,16 +87,8 @@ function compareArc(guessVal, targetVal) {
   return compareOrdinal(guessVal, targetVal, ARC_ORDER);
 }
 
-// "age" est { min, max } : min===max pour un âge exact confirmé, max===null pour un âge
-// minimum confirmé sans plafond ("2 100+ ans"), sinon une plage estimée ("100-500 ans") quand
-// l'âge réel n'est jamais documenté. Deux plages ne matchent que si elles sont identiques ;
-// la flèche haut/bas compare les bornes basses (min), un repère raisonnable dans tous les cas.
-function compareAgeRange(guessVal, targetVal) {
-  if (guessVal.min === targetVal.min && guessVal.max === targetVal.max) {
-    return { state: "correct" };
-  }
-  if (targetVal.min === guessVal.min) return { state: "incorrect" };
-  return { state: "incorrect", direction: targetVal.min > guessVal.min ? "up" : "down" };
+function compareAgeBracket(guessVal, targetVal) {
+  return compareOrdinal(guessVal, targetVal, AGE_BRACKET_ORDER);
 }
 
 function compareAttribute(attr, guessChar, targetChar) {
@@ -100,8 +99,8 @@ function compareAttribute(attr, guessChar, targetChar) {
       return compareArray(guessVal, targetVal);
     case "numeric":
       return compareNumeric(guessVal, targetVal);
-    case "ageRange":
-      return compareAgeRange(guessVal, targetVal);
+    case "ageBracket":
+      return compareAgeBracket(guessVal, targetVal);
     case "arc":
       return compareArc(guessVal, targetVal);
     default:
@@ -109,15 +108,8 @@ function compareAttribute(attr, guessChar, targetChar) {
   }
 }
 
-function formatAgeRange(val) {
-  if (val.max === null) return `${val.min}+ ans`;
-  if (val.min === val.max) return `${val.min} ans`;
-  return `${val.min}-${val.max} ans`;
-}
-
 function formatValue(attr, char) {
   const val = char[attr.key];
-  if (attr.type === "ageRange") return formatAgeRange(val);
   if (val === null || val === undefined) return "N/A";
   if (Array.isArray(val)) return val.join(" / ");
   return String(val);
@@ -153,9 +145,21 @@ function pickRandomCharacter(excludeName) {
 
 // --- UI ---
 
+// Enlève les accents/diacritiques pour que la recherche/le matching de noms les ignore
+// (ex : "toshiro" doit matcher "Tōshirō", "genryusai" doit matcher "Genryūsai").
+function normalize(str) {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 let mode = "daily";
 let target = null;
 let state = { guesses: [], finished: false, won: false };
+let currentSuggestions = [];
+let activeSuggestionIndex = -1;
 
 const guessInput = document.getElementById("guessInput");
 const suggestionsEl = document.getElementById("suggestions");
@@ -182,7 +186,8 @@ function buildHeader() {
 }
 
 function findCharacterByName(name) {
-  return CHARACTERS.find((c) => c.name.toLowerCase() === name.toLowerCase());
+  const target = normalize(name);
+  return CHARACTERS.find((c) => normalize(c.name) === target);
 }
 
 function renderGuessRow(guessChar) {
@@ -276,18 +281,30 @@ function submitGuess(name) {
   guessInput.value = "";
   suggestionsEl.innerHTML = "";
   suggestionsEl.hidden = true;
+  currentSuggestions = [];
+  activeSuggestionIndex = -1;
   if (!guessInput.disabled) guessInput.focus();
 }
 
+function highlightActiveSuggestion() {
+  const items = suggestionsEl.querySelectorAll(".suggestion");
+  items.forEach((item, i) => {
+    item.classList.toggle("active", i === activeSuggestionIndex);
+    if (i === activeSuggestionIndex) item.scrollIntoView({ block: "nearest" });
+  });
+}
+
 function renderSuggestions() {
-  const query = guessInput.value.trim().toLowerCase();
+  const query = normalize(guessInput.value);
   suggestionsEl.innerHTML = "";
+  currentSuggestions = [];
+  activeSuggestionIndex = -1;
   if (!query) {
     suggestionsEl.hidden = true;
     return;
   }
   const matches = CHARACTERS.filter(
-    (c) => c.name.toLowerCase().includes(query) && !state.guesses.includes(c.name)
+    (c) => normalize(c.name).includes(query) && !state.guesses.includes(c.name)
   ).slice(0, 8);
 
   if (matches.length === 0) {
@@ -295,14 +312,23 @@ function renderSuggestions() {
     return;
   }
 
-  for (const c of matches) {
+  currentSuggestions = matches;
+  activeSuggestionIndex = 0;
+
+  matches.forEach((c, i) => {
     const item = document.createElement("div");
     item.className = "suggestion";
     item.textContent = c.name;
+    item.addEventListener("mouseenter", () => {
+      activeSuggestionIndex = i;
+      highlightActiveSuggestion();
+    });
+    item.addEventListener("mousedown", (e) => e.preventDefault());
     item.addEventListener("click", () => submitGuess(c.name));
     suggestionsEl.appendChild(item);
-  }
+  });
   suggestionsEl.hidden = false;
+  highlightActiveSuggestion();
 }
 
 function replayState() {
@@ -361,12 +387,27 @@ function setMode(newMode) {
 
 guessInput.addEventListener("input", renderSuggestions);
 guessInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    const query = guessInput.value.trim();
-    const exact = findCharacterByName(query);
-    if (exact) {
-      submitGuess(exact.name);
+  const suggestionsVisible = !suggestionsEl.hidden && currentSuggestions.length > 0;
+
+  if (e.key === "ArrowDown") {
+    if (!suggestionsVisible) return;
+    e.preventDefault();
+    activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, currentSuggestions.length - 1);
+    highlightActiveSuggestion();
+  } else if (e.key === "ArrowUp") {
+    if (!suggestionsVisible) return;
+    e.preventDefault();
+    activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+    highlightActiveSuggestion();
+  } else if (e.key === "Enter") {
+    if (suggestionsVisible && activeSuggestionIndex >= 0) {
+      submitGuess(currentSuggestions[activeSuggestionIndex].name);
+      return;
     }
+    const exact = findCharacterByName(guessInput.value);
+    if (exact) submitGuess(exact.name);
+  } else if (e.key === "Escape") {
+    suggestionsEl.hidden = true;
   }
 });
 document.addEventListener("click", (e) => {

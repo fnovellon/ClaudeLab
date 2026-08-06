@@ -142,8 +142,10 @@ main {
   cursor: pointer;
 }
 
-.suggestion:hover {
-  background: var(--border);
+.suggestion:hover,
+.suggestion.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 .attempts {
