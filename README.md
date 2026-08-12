@@ -36,6 +36,12 @@ serveur statique, ex. `npx serve .`).
    plusieurs fois le même jour. En mode "Illimité", rien n'est sauvegardé :
    le bouton "Nouvelle partie" relance immédiatement avec un autre
    personnage aléatoire.
+5. À la fin d'une partie en mode "Défi du jour", un panneau de statistiques
+   s'affiche (parties jouées, % de victoires, série de jours consécutifs
+   gagnés en cours et record, répartition du nombre d'essais utilisés lors
+   des victoires). Ces statistiques sont cumulées dans le navigateur
+   (`localStorage`) au fil des défis quotidiens joués ; le mode "Illimité"
+   n'y contribue pas.
 
 ### Détails techniques
 

@@ -135,6 +135,58 @@ function saveState(state) {
   localStorage.setItem(storageKey(), JSON.stringify(state));
 }
 
+// --- Statistiques du Défi du jour ---
+// Persistées séparément de l'état par jour, sous une clé globale (pas de date dans la clé) afin
+// de cumuler l'historique. Uniquement pour le Défi du jour : le mode Illimité n'est jamais
+// persisté (voir startInfiniteMode), donc il n'alimente pas ces statistiques.
+
+const STATS_KEY = "bleachdle-stats";
+
+function defaultStats() {
+  return { played: 0, wins: 0, currentStreak: 0, maxStreak: 0, lastResultDate: null, distribution: Array(MAX_ATTEMPTS).fill(0) };
+}
+
+function loadStats() {
+  const raw = localStorage.getItem(STATS_KEY);
+  if (!raw) return defaultStats();
+  try {
+    const parsed = JSON.parse(raw);
+    const distribution =
+      Array.isArray(parsed.distribution) && parsed.distribution.length === MAX_ATTEMPTS
+        ? parsed.distribution
+        : defaultStats().distribution;
+    return { ...defaultStats(), ...parsed, distribution };
+  } catch {
+    return defaultStats();
+  }
+}
+
+function saveStats(stats) {
+  localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+}
+
+function isNextUTCDay(prevDateStr, dateStr) {
+  const prev = Date.parse(`${prevDateStr}T00:00:00Z`);
+  const cur = Date.parse(`${dateStr}T00:00:00Z`);
+  return cur - prev === 86400000;
+}
+
+function recordDailyResult(won, guessCount) {
+  const stats = loadStats();
+  const dateStr = todayUTCDateString();
+  stats.played += 1;
+  if (won) {
+    stats.wins += 1;
+    stats.distribution[Math.min(guessCount, MAX_ATTEMPTS) - 1] += 1;
+    stats.currentStreak = stats.lastResultDate && isNextUTCDay(stats.lastResultDate, dateStr) ? stats.currentStreak + 1 : 1;
+    stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+  } else {
+    stats.currentStreak = 0;
+  }
+  stats.lastResultDate = dateStr;
+  saveStats(stats);
+}
+
 function pickRandomCharacter(excludeName) {
   let pool = CHARACTERS;
   if (excludeName && CHARACTERS.length > 1) {
@@ -172,6 +224,53 @@ const dailyModeBtn = document.getElementById("dailyModeBtn");
 const infiniteModeBtn = document.getElementById("infiniteModeBtn");
 const newGameBtn = document.getElementById("newGameBtn");
 const versionTagEl = document.getElementById("versionTag");
+const statsPanelEl = document.getElementById("statsPanel");
+const statPlayedEl = document.getElementById("statPlayed");
+const statWinRateEl = document.getElementById("statWinRate");
+const statStreakEl = document.getElementById("statStreak");
+const statMaxStreakEl = document.getElementById("statMaxStreak");
+const distributionEl = document.getElementById("distribution");
+
+function renderStats() {
+  if (!statsPanelEl) return;
+  if (mode !== "daily" || !state.finished) {
+    statsPanelEl.hidden = true;
+    return;
+  }
+
+  const stats = loadStats();
+  const winRate = stats.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0;
+  statPlayedEl.textContent = String(stats.played);
+  statWinRateEl.textContent = `${winRate}%`;
+  statStreakEl.textContent = String(stats.currentStreak);
+  statMaxStreakEl.textContent = String(stats.maxStreak);
+
+  const maxCount = Math.max(1, ...stats.distribution);
+  distributionEl.innerHTML = "";
+  stats.distribution.forEach((count, i) => {
+    const row = document.createElement("div");
+    row.className = "dist-row";
+
+    const label = document.createElement("span");
+    label.className = "dist-label";
+    label.textContent = String(i + 1);
+    row.appendChild(label);
+
+    const barWrap = document.createElement("div");
+    barWrap.className = "dist-bar-wrap";
+    const bar = document.createElement("div");
+    bar.className = "dist-bar";
+    if (state.won && state.guesses.length === i + 1) bar.classList.add("current");
+    bar.style.width = `${count > 0 ? Math.max((count / maxCount) * 100, 8) : 0}%`;
+    bar.textContent = String(count);
+    barWrap.appendChild(bar);
+    row.appendChild(barWrap);
+
+    distributionEl.appendChild(row);
+  });
+
+  statsPanelEl.hidden = false;
+}
 
 function buildHeader() {
   const nameTh = document.createElement("th");
@@ -251,13 +350,17 @@ function triggerVictoryAnimation() {
 function endGame(won) {
   state.finished = true;
   state.won = won;
-  if (mode === "daily") saveState(state);
+  if (mode === "daily") {
+    saveState(state);
+    recordDailyResult(won, state.guesses.length);
+  }
   guessInput.disabled = true;
   messageEl.className = won ? "message win" : "message lose";
   messageEl.textContent = won
     ? `Bravo ! Le personnage était bien ${target.name}.`
     : `Perdu ! Le personnage à trouver était ${target.name}.`;
   if (won) triggerVictoryAnimation();
+  renderStats();
 }
 
 function submitGuess(name) {
@@ -343,6 +446,7 @@ function replayState() {
     messageEl.textContent = state.won
       ? `Bravo ! Le personnage était bien ${target.name}.`
       : `Perdu ! Le personnage à trouver était ${target.name}.`;
+    renderStats();
   }
 }
 
@@ -353,6 +457,7 @@ function resetBoard() {
   messageEl.className = "message";
   messageEl.textContent = "";
   suggestionsEl.hidden = true;
+  if (statsPanelEl) statsPanelEl.hidden = true;
 }
 
 function startDailyMode() {

@@ -37,6 +37,30 @@
     <p id="attemptsLeft" class="attempts"></p>
     <p id="message" class="message"></p>
 
+    <section id="statsPanel" class="stats-panel" hidden>
+      <h2 class="stats-title">Statistiques</h2>
+      <div class="stats-grid">
+        <div class="stat-tile">
+          <span class="stat-value" id="statPlayed">0</span>
+          <span class="stat-label">Parties</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="statWinRate">0%</span>
+          <span class="stat-label">Victoires</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="statStreak">0</span>
+          <span class="stat-label">Série actuelle</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="statMaxStreak">0</span>
+          <span class="stat-label">Meilleure série</span>
+        </div>
+      </div>
+      <h3 class="dist-title">Répartition des essais</h3>
+      <div id="distribution" class="distribution"></div>
+    </section>
+
     <div class="table-wrapper">
       <table>
         <thead>
