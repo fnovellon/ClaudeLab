@@ -351,8 +351,11 @@ function endGame(won) {
   state.finished = true;
   state.won = won;
   if (mode === "daily") {
+    if (!state.statsRecorded) {
+      recordDailyResult(won, state.guesses.length);
+      state.statsRecorded = true;
+    }
     saveState(state);
-    recordDailyResult(won, state.guesses.length);
   }
   guessInput.disabled = true;
   messageEl.className = won ? "message win" : "message lose";
@@ -446,6 +449,11 @@ function replayState() {
     messageEl.textContent = state.won
       ? `Bravo ! Le personnage était bien ${target.name}.`
       : `Perdu ! Le personnage à trouver était ${target.name}.`;
+    if (mode === "daily" && !state.statsRecorded) {
+      recordDailyResult(state.won, state.guesses.length);
+      state.statsRecorded = true;
+      saveState(state);
+    }
     renderStats();
   }
 }
