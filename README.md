@@ -62,9 +62,10 @@ serveur statique, ex. `npx serve .`).
    personnages du jeu, avec toutes leurs caractéristiques. Les colonnes sont
    triables (cliquer sur un en-tête, un second clic inverse l'ordre) et un
    champ de recherche filtre par nom (accents ignorés). Ce bouton est
-   désactivé tant qu'une partie est en cours (dans n'importe quel mode),
-   pour ne pas s'en servir comme antisèche — il se débloque une fois la
-   partie terminée.
+   désactivé dès qu'une tentative a été soumise et jusqu'à la fin de la
+   partie (dans n'importe quel mode), pour ne pas s'en servir comme
+   antisèche en cours de partie — il reste accessible avant la toute
+   première tentative, et se redébloque une fois la partie terminée.
 
 ### Détails techniques
 

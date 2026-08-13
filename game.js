@@ -426,7 +426,7 @@ function renderEncyclopediaTable() {
 }
 
 function openEncyclopedia() {
-  if (!state.finished || !encyclopediaModal) return;
+  if (!isEncyclopediaAllowed() || !encyclopediaModal) return;
   encyclopediaModal.hidden = false;
   if (encyclopediaSearchInput) encyclopediaSearchInput.value = "";
   buildEncyclopediaHeader();
@@ -501,13 +501,22 @@ function triggerVictoryAnimation() {
   }, 3200);
 }
 
+// L'encyclopédie n'est bloquante que pendant une partie effectivement commencée (au moins une
+// tentative soumise) : avant la première tentative, la consulter ne donne aucun avantage puisque
+// rien n'a encore été comparé au personnage à deviner.
+function isEncyclopediaAllowed() {
+  return state.finished || state.guesses.length === 0;
+}
+
 // Bouton "Encyclopédie" désactivé et bouton "Partager" masqué tant qu'une partie est en cours,
-// synchronisés à chaque changement d'état de partie (fin de partie, nouvelle partie, reload).
+// synchronisés à chaque changement d'état de partie (tentative soumise, fin de partie, nouvelle
+// partie, reload).
 function syncGameControls() {
   if (shareBtn) shareBtn.hidden = !(mode === "daily" && state.finished);
   if (encyclopediaBtn) {
-    encyclopediaBtn.disabled = !state.finished;
-    encyclopediaBtn.title = state.finished ? "" : "Termine la partie en cours pour consulter l'encyclopédie.";
+    const allowed = isEncyclopediaAllowed();
+    encyclopediaBtn.disabled = !allowed;
+    encyclopediaBtn.title = allowed ? "" : "Termine la partie en cours pour consulter l'encyclopédie.";
   }
 }
 
@@ -595,6 +604,7 @@ function submitGuess(name) {
   } else if (mode === "daily") {
     saveState(state);
   }
+  syncGameControls();
 
   guessInput.value = "";
   suggestionsEl.innerHTML = "";
