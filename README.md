@@ -61,7 +61,7 @@ serveur statique, ex. `npx serve .`).
   personnages déjà tirés dans la session, à chaque nouvelle partie.
 - Le numéro de version affiché en bas de page (`version.js`, constante
   `APP_VERSION`) est incrémenté de 1 à chaque commit sur le jeu.
-- Le dataset couvre une soixantaine de personnages majeurs de Bleach, avec
+- Le dataset couvre une soixante-dizaine de personnages majeurs de Bleach, avec
   des attributs curés à la main (race, affiliation, genre, statut,
   localisation, âge, escouade/rang, type de pouvoir, Bankai/Resurrección,
   taille, premier arc d'apparition, couleur de cheveux). Vérifié via
