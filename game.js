@@ -135,10 +135,11 @@ function saveState(state) {
   localStorage.setItem(storageKey(), JSON.stringify(state));
 }
 
-// --- Statistiques du Défi du jour ---
-// Persistées séparément de l'état par jour, sous une clé globale (pas de date dans la clé) afin
-// de cumuler l'historique. Uniquement pour le Défi du jour : le mode Illimité n'est jamais
-// persisté (voir startInfiniteMode), donc il n'alimente pas ces statistiques.
+// --- Statistiques ---
+// Défi du jour : persistées dans localStorage sous une clé globale (pas de date dans la clé)
+// afin de cumuler l'historique entre les jours. Illimité : gardées en mémoire uniquement
+// (voir infiniteStats plus bas) pour rester cohérent avec startInfiniteMode qui ne touche
+// jamais localStorage — un F5 réinitialise donc aussi ces stats-là.
 
 const STATS_KEY = "bleachdle-stats";
 
@@ -187,11 +188,35 @@ function recordDailyResult(won, guessCount) {
   saveStats(stats);
 }
 
-function pickRandomCharacter(excludeName) {
-  let pool = CHARACTERS;
-  if (excludeName && CHARACTERS.length > 1) {
-    pool = CHARACTERS.filter((c) => c.name !== excludeName);
+// --- Statistiques du mode Illimité (en mémoire, non persistées) ---
+
+function defaultInfiniteStats() {
+  return { played: 0, wins: 0, currentStreak: 0, maxStreak: 0, distribution: Array(MAX_ATTEMPTS).fill(0) };
+}
+
+let infiniteStats = defaultInfiniteStats();
+
+function recordInfiniteResult(won, guessCount) {
+  infiniteStats.played += 1;
+  if (won) {
+    infiniteStats.wins += 1;
+    infiniteStats.distribution[Math.min(guessCount, MAX_ATTEMPTS) - 1] += 1;
+    infiniteStats.currentStreak += 1;
+    infiniteStats.maxStreak = Math.max(infiniteStats.maxStreak, infiniteStats.currentStreak);
+  } else {
+    infiniteStats.currentStreak = 0;
   }
+}
+
+// Fenêtre glissante des N derniers personnages tirés en mode Illimité, gardée en mémoire
+// (non persistée : un F5 la réinitialise) pour éviter qu'un même personnage revienne trop vite.
+const INFINITE_NO_REPEAT_WINDOW = 7;
+let recentInfiniteNames = [];
+
+function pickRandomCharacter(excludeNames) {
+  const excludeSet = new Set(excludeNames || []);
+  let pool = CHARACTERS.filter((c) => !excludeSet.has(c.name));
+  if (pool.length === 0) pool = CHARACTERS;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -225,6 +250,8 @@ const infiniteModeBtn = document.getElementById("infiniteModeBtn");
 const newGameBtn = document.getElementById("newGameBtn");
 const versionTagEl = document.getElementById("versionTag");
 const statsPanelEl = document.getElementById("statsPanel");
+const statsTitleEl = document.getElementById("statsTitle");
+const statsNoteEl = document.getElementById("statsNote");
 const statPlayedEl = document.getElementById("statPlayed");
 const statWinRateEl = document.getElementById("statWinRate");
 const statStreakEl = document.getElementById("statStreak");
@@ -233,12 +260,21 @@ const distributionEl = document.getElementById("distribution");
 
 function renderStats() {
   if (!statsPanelEl) return;
-  if (mode !== "daily" || !state.finished) {
+  if (!state.finished) {
     statsPanelEl.hidden = true;
     return;
   }
 
-  const stats = loadStats();
+  const stats = mode === "daily" ? loadStats() : infiniteStats;
+  if (statsTitleEl) {
+    statsTitleEl.textContent = mode === "daily" ? "Statistiques — Défi du jour" : "Statistiques — Illimité";
+  }
+  if (statsNoteEl) {
+    statsNoteEl.hidden = mode !== "infinite";
+    if (mode === "infinite") {
+      statsNoteEl.textContent = "Session en cours uniquement : remises à zéro au rechargement de la page.";
+    }
+  }
   const winRate = stats.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0;
   statPlayedEl.textContent = String(stats.played);
   statWinRateEl.textContent = `${winRate}%`;
@@ -356,6 +392,8 @@ function endGame(won) {
       state.statsRecorded = true;
     }
     saveState(state);
+  } else {
+    recordInfiniteResult(won, state.guesses.length);
   }
   guessInput.disabled = true;
   messageEl.className = won ? "message win" : "message lose";
@@ -476,7 +514,11 @@ function startDailyMode() {
 }
 
 function startInfiniteMode() {
-  target = pickRandomCharacter(target ? target.name : null);
+  target = pickRandomCharacter(recentInfiniteNames);
+  recentInfiniteNames.push(target.name);
+  if (recentInfiniteNames.length > INFINITE_NO_REPEAT_WINDOW) {
+    recentInfiniteNames = recentInfiniteNames.slice(-INFINITE_NO_REPEAT_WINDOW);
+  }
   state = { guesses: [], finished: false, won: false };
   resetBoard();
   updateAttemptsLeft();

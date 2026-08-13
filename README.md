@@ -36,12 +36,20 @@ serveur statique, ex. `npx serve .`).
    plusieurs fois le même jour. En mode "Illimité", rien n'est sauvegardé :
    le bouton "Nouvelle partie" relance immédiatement avec un autre
    personnage aléatoire.
-5. À la fin d'une partie en mode "Défi du jour", un panneau de statistiques
-   s'affiche (parties jouées, % de victoires, série de jours consécutifs
-   gagnés en cours et record, répartition du nombre d'essais utilisés lors
-   des victoires). Ces statistiques sont cumulées dans le navigateur
-   (`localStorage`) au fil des défis quotidiens joués ; le mode "Illimité"
-   n'y contribue pas.
+5. À la fin de chaque partie, un panneau de statistiques s'affiche (parties
+   jouées, % de victoires, série actuelle et record, répartition du nombre
+   d'essais utilisés lors des victoires) :
+   - En mode "Défi du jour", ces statistiques sont cumulées dans le
+     navigateur (`localStorage`) au fil des jours, avec une série basée sur
+     des jours consécutifs gagnés.
+   - En mode "Illimité", les statistiques sont propres à la session en
+     cours (comptées séparément des statistiques du Défi du jour) et
+     remises à zéro au rechargement de la page, comme le reste de ce mode.
+     La série y correspond simplement aux victoires consécutives.
+   - En mode "Illimité" toujours, un même personnage ne peut pas retomber
+     pendant les 7 parties suivantes une fois deviné, pour varier les
+     personnages proposés ; cette liste des personnages récents n'est pas
+     sauvegardée non plus, donc un F5 la réinitialise.
 
 ### Détails techniques
 
@@ -49,8 +57,8 @@ serveur statique, ex. `npx serve .`).
   `characters.js` (le dataset), puis `game.js` (la logique).
 - Le personnage du jour est calculé à partir de la date UTC courante, donc
   identique pour tout le monde le même jour. En mode illimité, le
-  personnage est tiré au hasard dans le roster (en évitant de retirer deux
-  fois de suite le même) à chaque nouvelle partie.
+  personnage est tiré au hasard dans le roster, en excluant les 7 derniers
+  personnages déjà tirés dans la session, à chaque nouvelle partie.
 - Le numéro de version affiché en bas de page (`version.js`, constante
   `APP_VERSION`) est incrémenté de 1 à chaque commit sur le jeu.
 - Le dataset couvre une soixantaine de personnages majeurs de Bleach, avec

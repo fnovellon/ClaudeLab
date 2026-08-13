@@ -218,6 +218,14 @@ main {
   color: var(--text);
 }
 
+.stats-note {
+  margin: -0.35rem 0 0.75rem;
+  font-size: 0.7rem;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
