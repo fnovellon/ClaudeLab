@@ -50,6 +50,21 @@ serveur statique, ex. `npx serve .`).
      pendant les 7 parties suivantes une fois deviné, pour varier les
      personnages proposés ; cette liste des personnages récents n'est pas
      sauvegardée non plus, donc un F5 la réinitialise.
+   - Le bouton "📊 Statistiques" (au-dessus du champ de recherche) permet de
+     consulter ce panneau à tout moment, y compris en cours de partie, sans
+     attendre la fin.
+6. En mode "Défi du jour", une fois la partie terminée, un bouton "📋
+   Partager mon résultat" copie dans le presse-papier un résumé façon
+   Wordle (numéro du défi, résultat, une grille d'émojis résumant chaque
+   tentative) accompagné d'un lien vers le jeu, pour inviter quelqu'un à
+   essayer le même personnage du jour.
+7. Le bouton "📖 Encyclopédie" ouvre un tableau consultable de tous les
+   personnages du jeu, avec toutes leurs caractéristiques. Les colonnes sont
+   triables (cliquer sur un en-tête, un second clic inverse l'ordre) et un
+   champ de recherche filtre par nom (accents ignorés). Ce bouton est
+   désactivé tant qu'une partie est en cours (dans n'importe quel mode),
+   pour ne pas s'en servir comme antisèche — il se débloque une fois la
+   partie terminée.
 
 ### Détails techniques
 
@@ -59,7 +74,7 @@ serveur statique, ex. `npx serve .`).
   identique pour tout le monde le même jour. En mode illimité, le
   personnage est tiré au hasard dans le roster, en excluant les 7 derniers
   personnages déjà tirés dans la session, à chaque nouvelle partie.
-- Le numéro de version affiché en bas de page (`version.js`, constante
+- Le numéro de version affiché à côté du titre (`version.js`, constante
   `APP_VERSION`) est incrémenté de 1 à chaque commit sur le jeu.
 - Le dataset couvre une soixante-dizaine de personnages majeurs de Bleach, avec
   des attributs curés à la main (race, affiliation, genre, statut,

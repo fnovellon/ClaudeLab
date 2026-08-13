@@ -12,7 +12,10 @@
 
   <header>
     <img src="favicon.svg" alt="" class="logo" width="56" height="56" />
-    <h1>Bleachdle</h1>
+    <div class="title-row">
+      <h1>Bleachdle</h1>
+      <span id="versionTag" class="version-tag"></span>
+    </div>
     <p class="subtitle" id="subtitle">Devine le personnage Bleach du jour.</p>
   </header>
 
@@ -20,6 +23,11 @@
     <div class="mode-toggle" role="tablist">
       <button id="dailyModeBtn" class="mode-btn active" type="button">Défi du jour</button>
       <button id="infiniteModeBtn" class="mode-btn" type="button">Illimité</button>
+    </div>
+
+    <div class="toolbar-row">
+      <button id="statsToggleBtn" class="toolbar-btn" type="button">📊 Statistiques</button>
+      <button id="encyclopediaBtn" class="toolbar-btn" type="button">📖 Encyclopédie</button>
     </div>
 
     <div class="search-box">
@@ -36,6 +44,9 @@
 
     <p id="attemptsLeft" class="attempts"></p>
     <p id="message" class="message"></p>
+
+    <button id="shareBtn" class="share-btn" type="button" hidden>📋 Partager mon résultat</button>
+    <p id="shareFeedback" class="share-feedback" hidden>Copié dans le presse-papier !</p>
 
     <section id="statsPanel" class="stats-panel" hidden>
       <h2 class="stats-title" id="statsTitle">Statistiques</h2>
@@ -80,7 +91,26 @@
     </section>
   </main>
 
-  <footer id="versionTag" class="version-tag"></footer>
+  <div id="encyclopediaModal" class="modal-overlay" hidden>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="encyclopediaTitle">
+      <div class="modal-header">
+        <h2 id="encyclopediaTitle">Encyclopédie</h2>
+        <button id="encyclopediaCloseBtn" class="modal-close-btn" type="button" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-controls">
+        <input id="encyclopediaSearch" type="text" placeholder="Rechercher un personnage..." autocomplete="off" />
+        <span id="encyclopediaCount" class="encyclopedia-count"></span>
+      </div>
+      <div class="modal-table-wrapper">
+        <table class="encyclopedia-table">
+          <thead>
+            <tr id="encyclopediaHeaderRow"></tr>
+          </thead>
+          <tbody id="encyclopediaBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
   <script src="version.js"></script>
   <script src="characters.js"></script>

@@ -47,12 +47,21 @@ function todayUTCDateString() {
   return `${now.getUTCFullYear()}-${pad2(now.getUTCMonth() + 1)}-${pad2(now.getUTCDate())}`;
 }
 
-function getDailyCharacter() {
+function daysSinceEpoch() {
   const now = new Date();
   const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const daysSince = Math.floor((todayUTC - EPOCH_UTC) / 86400000);
+  return Math.floor((todayUTC - EPOCH_UTC) / 86400000);
+}
+
+function getDailyCharacter() {
+  const daysSince = daysSinceEpoch();
   const index = ((daysSince % CHARACTERS.length) + CHARACTERS.length) % CHARACTERS.length;
   return CHARACTERS[index];
+}
+
+// Numéro de défi affiché dans le texte de partage, façon Wordle (#1 le jour de l'EPOCH_UTC).
+function getDailyPuzzleNumber() {
+  return daysSinceEpoch() + 1;
 }
 
 function compareArray(guessVal, targetVal) {
@@ -257,13 +266,23 @@ const statWinRateEl = document.getElementById("statWinRate");
 const statStreakEl = document.getElementById("statStreak");
 const statMaxStreakEl = document.getElementById("statMaxStreak");
 const distributionEl = document.getElementById("distribution");
+const statsToggleBtn = document.getElementById("statsToggleBtn");
+const shareBtn = document.getElementById("shareBtn");
+const shareFeedbackEl = document.getElementById("shareFeedback");
+const encyclopediaBtn = document.getElementById("encyclopediaBtn");
+const encyclopediaModal = document.getElementById("encyclopediaModal");
+const encyclopediaCloseBtn = document.getElementById("encyclopediaCloseBtn");
+const encyclopediaSearchInput = document.getElementById("encyclopediaSearch");
+const encyclopediaCountEl = document.getElementById("encyclopediaCount");
+const encyclopediaHeaderRow = document.getElementById("encyclopediaHeaderRow");
+const encyclopediaBody = document.getElementById("encyclopediaBody");
 
-function renderStats() {
+// Bascule manuelle indépendante de la fin de partie (voir statsToggleBtn) : permet de
+// consulter les stats à tout moment, en plus de l'affichage automatique en fin de partie.
+let statsOpen = false;
+
+function renderStatsContent() {
   if (!statsPanelEl) return;
-  if (!state.finished) {
-    statsPanelEl.hidden = true;
-    return;
-  }
 
   const stats = mode === "daily" ? loadStats() : infiniteStats;
   if (statsTitleEl) {
@@ -304,8 +323,14 @@ function renderStats() {
 
     distributionEl.appendChild(row);
   });
+}
 
-  statsPanelEl.hidden = false;
+function updateStatsVisibility() {
+  if (!statsPanelEl) return;
+  const shouldShow = statsOpen || state.finished;
+  if (shouldShow) renderStatsContent();
+  statsPanelEl.hidden = !shouldShow;
+  if (statsToggleBtn) statsToggleBtn.classList.toggle("active", statsOpen);
 }
 
 function buildHeader() {
@@ -318,6 +343,99 @@ function buildHeader() {
     if (attr.title) th.title = attr.title;
     headerRow.appendChild(th);
   }
+}
+
+// --- Encyclopédie ---
+// Tableau consultable de tous les CHARACTERS, colonnes triables, recherche par nom
+// (accent-insensitive via normalize()). Volontairement bloquée pendant une partie en cours
+// (state.finished === false) pour ne pas servir de antisèche sur le personnage à deviner —
+// voir syncGameControls() qui désactive encyclopediaBtn en conséquence.
+
+let encyclopediaSort = { key: "name", dir: "asc" };
+const ENCYCLOPEDIA_COLUMNS = [{ key: "name", label: "Personnage" }, ...ATTRIBUTES];
+
+function encyclopediaCompare(key, charA, charB) {
+  if (key === "name") return charA.name.localeCompare(charB.name, "fr");
+  const attr = ATTRIBUTES.find((a) => a.key === key);
+  const av = charA[key];
+  const bv = charB[key];
+  if (attr.type === "array") {
+    return (av || []).join(", ").localeCompare((bv || []).join(", "), "fr");
+  }
+  if (attr.type === "numeric") {
+    if (av === null && bv === null) return 0;
+    if (av === null) return 1;
+    if (bv === null) return -1;
+    return av - bv;
+  }
+  if (attr.type === "ageBracket") return AGE_BRACKET_ORDER.indexOf(av) - AGE_BRACKET_ORDER.indexOf(bv);
+  if (attr.type === "arc") return ARC_ORDER.indexOf(av) - ARC_ORDER.indexOf(bv);
+  return String(av).localeCompare(String(bv), "fr");
+}
+
+function buildEncyclopediaHeader() {
+  if (!encyclopediaHeaderRow) return;
+  encyclopediaHeaderRow.innerHTML = "";
+  for (const col of ENCYCLOPEDIA_COLUMNS) {
+    const th = document.createElement("th");
+    th.textContent = col.label;
+    if (encyclopediaSort.key === col.key) {
+      const arrow = document.createElement("span");
+      arrow.className = "sort-arrow";
+      arrow.textContent = encyclopediaSort.dir === "asc" ? " ▲" : " ▼";
+      th.appendChild(arrow);
+    }
+    th.addEventListener("click", () => {
+      if (encyclopediaSort.key === col.key) {
+        encyclopediaSort.dir = encyclopediaSort.dir === "asc" ? "desc" : "asc";
+      } else {
+        encyclopediaSort = { key: col.key, dir: "asc" };
+      }
+      buildEncyclopediaHeader();
+      renderEncyclopediaTable();
+    });
+    encyclopediaHeaderRow.appendChild(th);
+  }
+}
+
+function renderEncyclopediaTable() {
+  if (!encyclopediaBody) return;
+  const query = normalize(encyclopediaSearchInput ? encyclopediaSearchInput.value : "");
+  const rows = CHARACTERS.filter((c) => normalize(c.name).includes(query)).sort((a, b) => {
+    const cmp = encyclopediaCompare(encyclopediaSort.key, a, b);
+    return encyclopediaSort.dir === "asc" ? cmp : -cmp;
+  });
+
+  encyclopediaBody.innerHTML = "";
+  for (const c of rows) {
+    const tr = document.createElement("tr");
+    const nameTd = document.createElement("td");
+    nameTd.textContent = c.name;
+    tr.appendChild(nameTd);
+    for (const attr of ATTRIBUTES) {
+      const td = document.createElement("td");
+      td.textContent = formatValue(attr, c);
+      tr.appendChild(td);
+    }
+    encyclopediaBody.appendChild(tr);
+  }
+
+  if (encyclopediaCountEl) {
+    encyclopediaCountEl.textContent = `${rows.length} personnage${rows.length > 1 ? "s" : ""}`;
+  }
+}
+
+function openEncyclopedia() {
+  if (!state.finished || !encyclopediaModal) return;
+  encyclopediaModal.hidden = false;
+  if (encyclopediaSearchInput) encyclopediaSearchInput.value = "";
+  buildEncyclopediaHeader();
+  renderEncyclopediaTable();
+  if (encyclopediaSearchInput) encyclopediaSearchInput.focus();
+}
+
+function closeEncyclopedia() {
+  if (encyclopediaModal) encyclopediaModal.hidden = true;
 }
 
 function findCharacterByName(name) {
@@ -383,6 +501,61 @@ function triggerVictoryAnimation() {
   }, 3200);
 }
 
+// Bouton "Encyclopédie" désactivé et bouton "Partager" masqué tant qu'une partie est en cours,
+// synchronisés à chaque changement d'état de partie (fin de partie, nouvelle partie, reload).
+function syncGameControls() {
+  if (shareBtn) shareBtn.hidden = !(mode === "daily" && state.finished);
+  if (encyclopediaBtn) {
+    encyclopediaBtn.disabled = !state.finished;
+    encyclopediaBtn.title = state.finished ? "" : "Termine la partie en cours pour consulter l'encyclopédie.";
+  }
+}
+
+// Texte de partage façon Wordle : numéro du défi, résultat, une grille d'émojis résumant
+// chaque tentative (🟩 = trouvé, 🟨 = au moins la moitié des attributs corrects, ⬜ = le reste),
+// et un lien vers le jeu pour inviter à venir défier le même personnage du jour.
+function buildShareText() {
+  const puzzleNumber = getDailyPuzzleNumber();
+  const resultLine = state.won
+    ? `Trouvé en ${state.guesses.length}/${MAX_ATTEMPTS} essais ✅`
+    : `Perdu (${MAX_ATTEMPTS}/${MAX_ATTEMPTS}) ❌`;
+  const grid = state.guesses
+    .map((name, i) => {
+      const isWinRow = state.won && i === state.guesses.length - 1;
+      if (isWinRow) return "🟩";
+      const guessChar = findCharacterByName(name);
+      const matchCount = ATTRIBUTES.filter((attr) => compareAttribute(attr, guessChar, target).state === "correct").length;
+      return matchCount / ATTRIBUTES.length >= 0.5 ? "🟨" : "⬜";
+    })
+    .join("");
+  return [`Bleachdle #${puzzleNumber} — ${resultLine}`, grid, "", `À toi de jouer : ${window.location.href}`].join("\n");
+}
+
+let shareFeedbackTimeout = null;
+
+async function copyShareText() {
+  const text = buildShareText();
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+  }
+  if (shareFeedbackEl) {
+    shareFeedbackEl.hidden = false;
+    window.clearTimeout(shareFeedbackTimeout);
+    shareFeedbackTimeout = window.setTimeout(() => {
+      shareFeedbackEl.hidden = true;
+    }, 2500);
+  }
+}
+
 function endGame(won) {
   state.finished = true;
   state.won = won;
@@ -401,7 +574,8 @@ function endGame(won) {
     ? `Bravo ! Le personnage était bien ${target.name}.`
     : `Perdu ! Le personnage à trouver était ${target.name}.`;
   if (won) triggerVictoryAnimation();
-  renderStats();
+  updateStatsVisibility();
+  syncGameControls();
 }
 
 function submitGuess(name) {
@@ -492,7 +666,8 @@ function replayState() {
       state.statsRecorded = true;
       saveState(state);
     }
-    renderStats();
+    updateStatsVisibility();
+    syncGameControls();
   }
 }
 
@@ -503,7 +678,10 @@ function resetBoard() {
   messageEl.className = "message";
   messageEl.textContent = "";
   suggestionsEl.hidden = true;
-  if (statsPanelEl) statsPanelEl.hidden = true;
+  if (shareFeedbackEl) shareFeedbackEl.hidden = true;
+  if (encyclopediaModal) encyclopediaModal.hidden = true;
+  updateStatsVisibility();
+  syncGameControls();
 }
 
 function startDailyMode() {
@@ -572,6 +750,31 @@ document.addEventListener("click", (e) => {
 dailyModeBtn.addEventListener("click", () => setMode("daily"));
 infiniteModeBtn.addEventListener("click", () => setMode("infinite"));
 newGameBtn.addEventListener("click", () => startInfiniteMode());
+
+if (statsToggleBtn) {
+  statsToggleBtn.addEventListener("click", () => {
+    statsOpen = !statsOpen;
+    updateStatsVisibility();
+  });
+}
+
+if (shareBtn) {
+  shareBtn.addEventListener("click", () => {
+    copyShareText();
+  });
+}
+
+if (encyclopediaBtn) encyclopediaBtn.addEventListener("click", openEncyclopedia);
+if (encyclopediaCloseBtn) encyclopediaCloseBtn.addEventListener("click", closeEncyclopedia);
+if (encyclopediaSearchInput) encyclopediaSearchInput.addEventListener("input", renderEncyclopediaTable);
+if (encyclopediaModal) {
+  encyclopediaModal.addEventListener("click", (e) => {
+    if (e.target === encyclopediaModal) closeEncyclopedia();
+  });
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && encyclopediaModal && !encyclopediaModal.hidden) closeEncyclopedia();
+});
 
 buildHeader();
 if (versionTagEl) versionTagEl.textContent = `v${APP_VERSION}`;

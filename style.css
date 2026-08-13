@@ -49,6 +49,12 @@ h1 {
   letter-spacing: 0.05em;
 }
 
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
 .subtitle {
   color: var(--muted);
   margin: 0.25rem 0 0;
@@ -103,6 +109,63 @@ main {
 .new-game-btn:hover {
   background: var(--accent);
   color: #fff;
+}
+
+.toolbar-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.toolbar-btn {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.toolbar-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.share-btn {
+  margin-top: 0.75rem;
+  border: 1px solid var(--correct);
+  background: transparent;
+  color: var(--correct);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.share-btn:hover {
+  background: var(--correct);
+  color: #fff;
+}
+
+.share-feedback {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--correct);
 }
 
 .search-box {
@@ -307,7 +370,7 @@ main {
   width: 100%;
 }
 
-table {
+.table-wrapper table {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
@@ -324,23 +387,23 @@ td {
 }
 
 @media (min-width: 1080px) {
-  th:nth-child(1), td:nth-child(1) { width: 9%; }
-  th:nth-child(2), td:nth-child(2) { width: 8%; }
-  th:nth-child(3), td:nth-child(3) { width: 8%; }
-  th:nth-child(4), td:nth-child(4) { width: 7%; }
-  th:nth-child(5), td:nth-child(5) { width: 7%; }
-  th:nth-child(6), td:nth-child(6) { width: 8%; }
-  th:nth-child(7), td:nth-child(7) { width: 9%; }
-  th:nth-child(8), td:nth-child(8) { width: 9%; }
-  th:nth-child(9), td:nth-child(9) { width: 7%; }
-  th:nth-child(10), td:nth-child(10) { width: 8%; }
-  th:nth-child(11), td:nth-child(11) { width: 5%; }
-  th:nth-child(12), td:nth-child(12) { width: 7%; }
-  th:nth-child(13), td:nth-child(13) { width: 8%; }
+  .table-wrapper th:nth-child(1), .table-wrapper td:nth-child(1) { width: 9%; }
+  .table-wrapper th:nth-child(2), .table-wrapper td:nth-child(2) { width: 8%; }
+  .table-wrapper th:nth-child(3), .table-wrapper td:nth-child(3) { width: 8%; }
+  .table-wrapper th:nth-child(4), .table-wrapper td:nth-child(4) { width: 7%; }
+  .table-wrapper th:nth-child(5), .table-wrapper td:nth-child(5) { width: 7%; }
+  .table-wrapper th:nth-child(6), .table-wrapper td:nth-child(6) { width: 8%; }
+  .table-wrapper th:nth-child(7), .table-wrapper td:nth-child(7) { width: 9%; }
+  .table-wrapper th:nth-child(8), .table-wrapper td:nth-child(8) { width: 9%; }
+  .table-wrapper th:nth-child(9), .table-wrapper td:nth-child(9) { width: 7%; }
+  .table-wrapper th:nth-child(10), .table-wrapper td:nth-child(10) { width: 8%; }
+  .table-wrapper th:nth-child(11), .table-wrapper td:nth-child(11) { width: 5%; }
+  .table-wrapper th:nth-child(12), .table-wrapper td:nth-child(12) { width: 7%; }
+  .table-wrapper th:nth-child(13), .table-wrapper td:nth-child(13) { width: 8%; }
 }
 
 @media (max-width: 1079px) {
-  thead {
+  .table-wrapper thead {
     display: none;
   }
 
@@ -349,22 +412,22 @@ td {
     margin: 0 auto;
   }
 
-  table,
-  tbody,
-  tr,
-  td {
+  .table-wrapper table,
+  .table-wrapper tbody,
+  .table-wrapper tr,
+  .table-wrapper td {
     display: block;
     width: 100%;
   }
 
-  tr {
+  .table-wrapper tr {
     margin-bottom: 0.75rem;
     border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
   }
 
-  td {
+  .table-wrapper td {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -373,7 +436,7 @@ td {
     font-size: 0.85rem;
   }
 
-  td.cell::before {
+  .table-wrapper td.cell::before {
     content: attr(data-label);
     font-weight: 600;
     color: inherit;
@@ -383,13 +446,13 @@ td {
     flex-shrink: 0;
   }
 
-  .value-wrap {
+  .table-wrapper .value-wrap {
     display: flex;
     align-items: center;
     gap: 0.4rem;
   }
 
-  .name-cell {
+  .table-wrapper .name-cell {
     justify-content: center;
     font-size: 1rem;
   }
@@ -467,8 +530,128 @@ th {
 }
 
 .version-tag {
-  margin-top: 2rem;
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   opacity: 0.7;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 11, 14, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 100;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.modal-close-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+}
+
+.modal-close-btn:hover {
+  color: var(--text);
+}
+
+.modal-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+#encyclopediaSearch {
+  flex: 1;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.encyclopedia-count {
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.modal-table-wrapper {
+  overflow: auto;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.encyclopedia-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 900px;
+}
+
+.encyclopedia-table th,
+.encyclopedia-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.encyclopedia-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.encyclopedia-table thead th:hover {
+  color: var(--text);
+}
+
+.encyclopedia-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sort-arrow {
+  color: var(--accent);
 }
