@@ -17,6 +17,12 @@
       <span id="versionTag" class="version-tag"></span>
     </div>
     <p class="subtitle" id="subtitle">Devine le personnage Bleach du jour.</p>
+    <div class="lang-switcher" id="langSwitcher">
+      <button class="lang-btn" data-lang="fr" type="button">FR</button>
+      <button class="lang-btn" data-lang="en" type="button">EN</button>
+      <button class="lang-btn" data-lang="es" type="button">ES</button>
+      <button class="lang-btn" data-lang="de" type="button">DE</button>
+    </div>
   </header>
 
   <main>
@@ -54,22 +60,22 @@
       <div class="stats-grid">
         <div class="stat-tile">
           <span class="stat-value" id="statPlayed">0</span>
-          <span class="stat-label">Parties</span>
+          <span class="stat-label" id="statPlayedLabel">Parties</span>
         </div>
         <div class="stat-tile">
           <span class="stat-value" id="statWinRate">0%</span>
-          <span class="stat-label">Victoires</span>
+          <span class="stat-label" id="statWinRateLabel">Victoires</span>
         </div>
         <div class="stat-tile">
           <span class="stat-value" id="statStreak">0</span>
-          <span class="stat-label">Série actuelle</span>
+          <span class="stat-label" id="statStreakLabel">Série actuelle</span>
         </div>
         <div class="stat-tile">
           <span class="stat-value" id="statMaxStreak">0</span>
-          <span class="stat-label">Meilleure série</span>
+          <span class="stat-label" id="statMaxStreakLabel">Meilleure série</span>
         </div>
       </div>
-      <h3 class="dist-title">Répartition des essais</h3>
+      <h3 class="dist-title" id="distributionTitle">Répartition des essais</h3>
       <div id="distribution" class="distribution"></div>
     </section>
 
@@ -83,11 +89,11 @@
     </div>
 
     <section class="legend">
-      <span class="legend-item"><span class="swatch correct"></span> Identique</span>
-      <span class="legend-item"><span class="swatch partial"></span> Partiel</span>
-      <span class="legend-item"><span class="swatch incorrect"></span> Différent</span>
-      <span class="legend-item">▲ / ▼ = indice plus haut / plus bas</span>
-      <span class="legend-item">Âge = tranche (10-20, 20-50, 50-100, 100-150, 150-1000, 1000+ ans)</span>
+      <span class="legend-item"><span class="swatch correct"></span> <span id="legendCorrect">Identique</span></span>
+      <span class="legend-item"><span class="swatch partial"></span> <span id="legendPartial">Partiel</span></span>
+      <span class="legend-item"><span class="swatch incorrect"></span> <span id="legendIncorrect">Différent</span></span>
+      <span class="legend-item" id="legendArrow">▲ / ▼ = indice plus haut / plus bas</span>
+      <span class="legend-item" id="legendAge">Âge = tranche (10-20, 20-50, 50-100, 100-150, 150-1000, 1000+ ans)</span>
     </section>
   </main>
 
@@ -113,6 +119,7 @@
   </div>
 
   <script src="version.js"></script>
+  <script src="i18n.js"></script>
   <script src="characters.js"></script>
   <script src="game.js"></script>
 </body>

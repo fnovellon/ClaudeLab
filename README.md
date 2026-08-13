@@ -66,11 +66,20 @@ serveur statique, ex. `npx serve .`).
    partie (dans n'importe quel mode), pour ne pas s'en servir comme
    antisèche en cours de partie — il reste accessible avant la toute
    première tentative, et se redébloque une fois la partie terminée.
+8. L'interface est disponible en français, anglais, espagnol et allemand
+   (sélecteur FR/EN/ES/DE sous le titre). La langue est détectée
+   automatiquement à la première visite (langue du navigateur, repli sur le
+   français si non supportée), puis mémorisée dans le navigateur. Seule
+   l'interface est traduite : les caractéristiques des personnages (race,
+   affiliation, pouvoir, lieux...) restent en français dans les 4 langues,
+   comme le fait la plupart des communautés Bleach avec la terminologie de
+   l'œuvre (Shinigami, Zanpakutō, Espada, Gotei 13...).
 
 ### Détails techniques
 
 - Aucun build ni dépendance : `index.html` charge `version.js`, puis
-  `characters.js` (le dataset), puis `game.js` (la logique).
+  `i18n.js` (traductions UI), puis `characters.js` (le dataset), puis
+  `game.js` (la logique).
 - Le personnage du jour est calculé à partir de la date UTC courante, donc
   identique pour tout le monde le même jour. En mode illimité, le
   personnage est tiré au hasard dans le roster, en excluant les 7 derniers

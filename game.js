@@ -20,19 +20,21 @@ const ARC_ORDER = [
 // est placé dans la tranche correspondante.
 const AGE_BRACKET_ORDER = ["10-20 ans", "20-50 ans", "50-100 ans", "100-150 ans", "150-1000 ans", "1000+ ans"];
 
+// Note : "label" stocke une clé de traduction (voir i18n.js), pas le texte affiché directement —
+// tout usage de attr.label doit passer par t(attr.label).
 const ATTRIBUTES = [
-  { key: "race", label: "Race", type: "array" },
-  { key: "affiliation", label: "Affiliation", type: "array" },
-  { key: "gender", label: "Genre", type: "exact" },
-  { key: "status", label: "Statut", type: "exact" },
-  { key: "location", label: "Lieu", type: "exact" },
-  { key: "ageBracket", label: "Âge", type: "ageBracket" },
-  { key: "rank", label: "Escouade / Rang", type: "numeric" },
-  { key: "powerType", label: "Pouvoir", type: "exact" },
-  { key: "bankaiOrResurreccion", label: "Bankai/Rés.", type: "exact" },
-  { key: "height", label: "Taille", type: "numeric" },
-  { key: "firstArc", label: "1er arc", type: "arc" },
-  { key: "hairColor", label: "Cheveux", type: "exact" },
+  { key: "race", label: "colRace", type: "array" },
+  { key: "affiliation", label: "colAffiliation", type: "array" },
+  { key: "gender", label: "colGender", type: "exact" },
+  { key: "status", label: "colStatus", type: "exact" },
+  { key: "location", label: "colLocation", type: "exact" },
+  { key: "ageBracket", label: "colAge", type: "ageBracket" },
+  { key: "rank", label: "colRank", type: "numeric" },
+  { key: "powerType", label: "colPower", type: "exact" },
+  { key: "bankaiOrResurreccion", label: "colBankai", type: "exact" },
+  { key: "height", label: "colHeight", type: "numeric" },
+  { key: "firstArc", label: "colFirstArc", type: "arc" },
+  { key: "hairColor", label: "colHair", type: "exact" },
 ];
 
 // Le 1er janvier 2024 (UTC) sert de jour 0 pour dériver le personnage du jour.
@@ -276,6 +278,18 @@ const encyclopediaSearchInput = document.getElementById("encyclopediaSearch");
 const encyclopediaCountEl = document.getElementById("encyclopediaCount");
 const encyclopediaHeaderRow = document.getElementById("encyclopediaHeaderRow");
 const encyclopediaBody = document.getElementById("encyclopediaBody");
+const langSwitcherEl = document.getElementById("langSwitcher");
+const encyclopediaTitleEl = document.getElementById("encyclopediaTitle");
+const statPlayedLabelEl = document.getElementById("statPlayedLabel");
+const statWinRateLabelEl = document.getElementById("statWinRateLabel");
+const statStreakLabelEl = document.getElementById("statStreakLabel");
+const statMaxStreakLabelEl = document.getElementById("statMaxStreakLabel");
+const distributionTitleEl = document.getElementById("distributionTitle");
+const legendCorrectEl = document.getElementById("legendCorrect");
+const legendPartialEl = document.getElementById("legendPartial");
+const legendIncorrectEl = document.getElementById("legendIncorrect");
+const legendArrowEl = document.getElementById("legendArrow");
+const legendAgeEl = document.getElementById("legendAge");
 
 // Bascule manuelle indépendante de la fin de partie (voir statsToggleBtn) : permet de
 // consulter les stats à tout moment, en plus de l'affichage automatique en fin de partie.
@@ -286,14 +300,19 @@ function renderStatsContent() {
 
   const stats = mode === "daily" ? loadStats() : infiniteStats;
   if (statsTitleEl) {
-    statsTitleEl.textContent = mode === "daily" ? "Statistiques — Défi du jour" : "Statistiques — Illimité";
+    statsTitleEl.textContent = mode === "daily" ? t("statsTitleDaily") : t("statsTitleInfinite");
   }
   if (statsNoteEl) {
     statsNoteEl.hidden = mode !== "infinite";
     if (mode === "infinite") {
-      statsNoteEl.textContent = "Session en cours uniquement : remises à zéro au rechargement de la page.";
+      statsNoteEl.textContent = t("statsNoteInfinite");
     }
   }
+  if (statPlayedLabelEl) statPlayedLabelEl.textContent = t("statPlayed");
+  if (statWinRateLabelEl) statWinRateLabelEl.textContent = t("statWinRate");
+  if (statStreakLabelEl) statStreakLabelEl.textContent = t("statStreak");
+  if (statMaxStreakLabelEl) statMaxStreakLabelEl.textContent = t("statMaxStreak");
+  if (distributionTitleEl) distributionTitleEl.textContent = t("distributionTitle");
   const winRate = stats.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0;
   statPlayedEl.textContent = String(stats.played);
   statWinRateEl.textContent = `${winRate}%`;
@@ -334,12 +353,13 @@ function updateStatsVisibility() {
 }
 
 function buildHeader() {
+  headerRow.innerHTML = "";
   const nameTh = document.createElement("th");
-  nameTh.textContent = "Personnage";
+  nameTh.textContent = t("colName");
   headerRow.appendChild(nameTh);
   for (const attr of ATTRIBUTES) {
     const th = document.createElement("th");
-    th.textContent = attr.label;
+    th.textContent = t(attr.label);
     if (attr.title) th.title = attr.title;
     headerRow.appendChild(th);
   }
@@ -352,7 +372,7 @@ function buildHeader() {
 // voir syncGameControls() qui désactive encyclopediaBtn en conséquence.
 
 let encyclopediaSort = { key: "name", dir: "asc" };
-const ENCYCLOPEDIA_COLUMNS = [{ key: "name", label: "Personnage" }, ...ATTRIBUTES];
+const ENCYCLOPEDIA_COLUMNS = [{ key: "name", label: "colName" }, ...ATTRIBUTES];
 
 function encyclopediaCompare(key, charA, charB) {
   if (key === "name") return charA.name.localeCompare(charB.name, "fr");
@@ -378,7 +398,7 @@ function buildEncyclopediaHeader() {
   encyclopediaHeaderRow.innerHTML = "";
   for (const col of ENCYCLOPEDIA_COLUMNS) {
     const th = document.createElement("th");
-    th.textContent = col.label;
+    th.textContent = t(col.label);
     if (encyclopediaSort.key === col.key) {
       const arrow = document.createElement("span");
       arrow.className = "sort-arrow";
@@ -421,7 +441,10 @@ function renderEncyclopediaTable() {
   }
 
   if (encyclopediaCountEl) {
-    encyclopediaCountEl.textContent = `${rows.length} personnage${rows.length > 1 ? "s" : ""}`;
+    encyclopediaCountEl.textContent =
+      rows.length === 1
+        ? t("encyclopediaCountSingular", { n: rows.length })
+        : t("encyclopediaCountPlural", { n: rows.length });
   }
 }
 
@@ -455,7 +478,7 @@ function renderGuessRow(guessChar) {
     const result = compareAttribute(attr, guessChar, target);
     const cell = document.createElement("td");
     cell.className = `cell ${result.state}`;
-    cell.dataset.label = attr.label;
+    cell.dataset.label = t(attr.label);
     const valueWrap = document.createElement("span");
     valueWrap.className = "value-wrap";
     const valueSpan = document.createElement("span");
@@ -476,7 +499,7 @@ function renderGuessRow(guessChar) {
 
 function updateAttemptsLeft() {
   const remaining = MAX_ATTEMPTS - state.guesses.length;
-  attemptsLeftEl.textContent = `Essais restants : ${Math.max(remaining, 0)}`;
+  attemptsLeftEl.textContent = t("attemptsLeft", { n: Math.max(remaining, 0) });
 }
 
 const VICTORY_EMOJIS = ["⚔️", "👺"];
@@ -516,28 +539,36 @@ function syncGameControls() {
   if (encyclopediaBtn) {
     const allowed = isEncyclopediaAllowed();
     encyclopediaBtn.disabled = !allowed;
-    encyclopediaBtn.title = allowed ? "" : "Termine la partie en cours pour consulter l'encyclopédie.";
+    encyclopediaBtn.title = allowed ? "" : t("encyclopediaLockedTitle");
   }
 }
 
 // Texte de partage façon Wordle : numéro du défi, résultat, une grille d'émojis résumant
-// chaque tentative (🟩 = trouvé, 🟨 = au moins la moitié des attributs corrects, ⬜ = le reste),
-// et un lien vers le jeu pour inviter à venir défier le même personnage du jour.
+// chaque tentative (un carré = une tentative entière, pas un attribut individuel, faute de quoi
+// la grille serait illisible avec ~12 attributs par tentative) : 🟩 = personnage trouvé,
+// 🟧 = tentative très proche (≥ 2/3 des attributs corrects), 🟨 = tentative moyenne (≥ 1/3),
+// ⬜ = tentative éloignée. Une légende est incluse dans le texte lui-même (pas seulement dans le
+// jeu) puisque le destinataire du partage n'a pas forcément ce contexte.
 function buildShareText() {
   const puzzleNumber = getDailyPuzzleNumber();
   const resultLine = state.won
-    ? `Trouvé en ${state.guesses.length}/${MAX_ATTEMPTS} essais ✅`
-    : `Perdu (${MAX_ATTEMPTS}/${MAX_ATTEMPTS}) ❌`;
+    ? t("shareResultWin", { n: state.guesses.length, max: MAX_ATTEMPTS })
+    : t("shareResultLose", { max: MAX_ATTEMPTS });
   const grid = state.guesses
     .map((name, i) => {
       const isWinRow = state.won && i === state.guesses.length - 1;
       if (isWinRow) return "🟩";
       const guessChar = findCharacterByName(name);
       const matchCount = ATTRIBUTES.filter((attr) => compareAttribute(attr, guessChar, target).state === "correct").length;
-      return matchCount / ATTRIBUTES.length >= 0.5 ? "🟨" : "⬜";
+      const ratio = matchCount / ATTRIBUTES.length;
+      if (ratio >= 2 / 3) return "🟧";
+      if (ratio >= 1 / 3) return "🟨";
+      return "⬜";
     })
     .join("");
-  return [`Bleachdle #${puzzleNumber} — ${resultLine}`, grid, "", `À toi de jouer : ${window.location.href}`].join("\n");
+  const legend = t("shareLegend");
+  const title = `${t("shareTitle", { n: puzzleNumber })} — ${resultLine}`;
+  return [title, grid, legend, "", t("sharePrompt", { url: window.location.href })].join("\n");
 }
 
 let shareFeedbackTimeout = null;
@@ -565,6 +596,19 @@ async function copyShareText() {
   }
 }
 
+// Rejoue le message de fin de partie à partir de l'état courant, sans effet de bord (pas
+// d'enregistrement de stats) — utilisé aussi bien à la fin d'une partie qu'au changement de
+// langue, pour que le message reste cohérent avec state.won/target.name.
+function renderMessage() {
+  if (!state.finished) {
+    messageEl.className = "message";
+    messageEl.textContent = "";
+    return;
+  }
+  messageEl.className = state.won ? "message win" : "message lose";
+  messageEl.textContent = state.won ? t("winMessage", { name: target.name }) : t("loseMessage", { name: target.name });
+}
+
 function endGame(won) {
   state.finished = true;
   state.won = won;
@@ -578,10 +622,7 @@ function endGame(won) {
     recordInfiniteResult(won, state.guesses.length);
   }
   guessInput.disabled = true;
-  messageEl.className = won ? "message win" : "message lose";
-  messageEl.textContent = won
-    ? `Bravo ! Le personnage était bien ${target.name}.`
-    : `Perdu ! Le personnage à trouver était ${target.name}.`;
+  renderMessage();
   if (won) triggerVictoryAnimation();
   updateStatsVisibility();
   syncGameControls();
@@ -659,18 +700,23 @@ function renderSuggestions() {
   highlightActiveSuggestion();
 }
 
-function replayState() {
+// Reconstruit intégralement le tableau des tentatives à partir de state.guesses — utilisé au
+// chargement d'une partie déjà en cours (replayState()) et lors d'un changement de langue, pour
+// que les libellés de colonnes en vue mobile (data-label) restent cohérents avec la langue active.
+function rerenderResultsBody() {
+  resultsBody.innerHTML = "";
   for (const name of state.guesses) {
     const guessChar = findCharacterByName(name);
     if (guessChar) renderGuessRow(guessChar);
   }
+}
+
+function replayState() {
+  rerenderResultsBody();
   updateAttemptsLeft();
   if (state.finished) {
     guessInput.disabled = true;
-    messageEl.className = state.won ? "message win" : "message lose";
-    messageEl.textContent = state.won
-      ? `Bravo ! Le personnage était bien ${target.name}.`
-      : `Perdu ! Le personnage à trouver était ${target.name}.`;
+    renderMessage();
     if (mode === "daily" && !state.statsRecorded) {
       recordDailyResult(state.won, state.guesses.length);
       state.statsRecorded = true;
@@ -717,14 +763,60 @@ function setMode(newMode) {
   dailyModeBtn.classList.toggle("active", mode === "daily");
   infiniteModeBtn.classList.toggle("active", mode === "infinite");
   newGameBtn.hidden = mode !== "infinite";
-  subtitleEl.textContent =
-    mode === "daily"
-      ? "Devine le personnage Bleach du jour."
-      : "Devine le personnage Bleach — partie illimitée.";
+  subtitleEl.textContent = mode === "daily" ? t("subtitleDaily") : t("subtitleInfinite");
   if (mode === "daily") {
     startDailyMode();
   } else {
     startInfiniteMode();
+  }
+}
+
+function syncLangButtons() {
+  if (!langSwitcherEl) return;
+  langSwitcherEl.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.lang === currentLang);
+  });
+}
+
+// Applique la langue courante à tout ce qui est affiché : libellés statiques (boutons, légende,
+// placeholders), en-têtes de tableaux reconstruits (buildHeader()/buildEncyclopediaHeader()),
+// tentatives déjà rendues (rerenderResultsBody(), pour que le data-label mobile suive la langue),
+// et contenu dépendant de l'état de partie (message, stats, encyclopédie si ouverte). Appelée au
+// démarrage et à chaque changement de langue.
+function applyLanguage() {
+  document.documentElement.lang = currentLang;
+  syncLangButtons();
+
+  guessInput.placeholder = t("searchPlaceholder");
+  dailyModeBtn.textContent = t("modeDaily");
+  infiniteModeBtn.textContent = t("modeInfinite");
+  if (statsToggleBtn) statsToggleBtn.textContent = t("statsToggle");
+  if (encyclopediaBtn) encyclopediaBtn.textContent = t("encyclopediaBtn");
+  newGameBtn.textContent = t("newGame");
+  if (shareBtn) shareBtn.textContent = t("shareBtn");
+  if (shareFeedbackEl) shareFeedbackEl.textContent = t("shareFeedback");
+  subtitleEl.textContent = mode === "daily" ? t("subtitleDaily") : t("subtitleInfinite");
+
+  if (legendCorrectEl) legendCorrectEl.textContent = t("legendCorrect");
+  if (legendPartialEl) legendPartialEl.textContent = t("legendPartial");
+  if (legendIncorrectEl) legendIncorrectEl.textContent = t("legendIncorrect");
+  if (legendArrowEl) legendArrowEl.textContent = t("legendArrow");
+  if (legendAgeEl) legendAgeEl.textContent = t("legendAge");
+
+  if (encyclopediaTitleEl) encyclopediaTitleEl.textContent = t("encyclopediaTitle");
+  if (encyclopediaCloseBtn) encyclopediaCloseBtn.setAttribute("aria-label", t("encyclopediaClose"));
+  if (encyclopediaSearchInput) encyclopediaSearchInput.placeholder = t("encyclopediaSearchPlaceholder");
+
+  buildHeader();
+  rerenderResultsBody();
+  updateAttemptsLeft();
+  renderMessage();
+  syncGameControls();
+  updateStatsVisibility();
+
+  if (encyclopediaModal && !encyclopediaModal.hidden) {
+    buildEncyclopediaHeader();
+    renderEncyclopediaTable();
   }
 }
 
@@ -786,6 +878,15 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && encyclopediaModal && !encyclopediaModal.hidden) closeEncyclopedia();
 });
 
-buildHeader();
+if (langSwitcherEl) {
+  langSwitcherEl.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setLang(btn.dataset.lang);
+      applyLanguage();
+    });
+  });
+}
+
+applyLanguage();
 if (versionTagEl) versionTagEl.textContent = `v${APP_VERSION}`;
 setMode("daily");
