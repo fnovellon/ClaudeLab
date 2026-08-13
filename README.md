@@ -69,11 +69,14 @@ serveur statique, ex. `npx serve .`).
 8. L'interface est disponible en français, anglais, espagnol et allemand
    (sélecteur FR/EN/ES/DE sous le titre). La langue est détectée
    automatiquement à la première visite (langue du navigateur, repli sur le
-   français si non supportée), puis mémorisée dans le navigateur. Seule
-   l'interface est traduite : les caractéristiques des personnages (race,
-   affiliation, pouvoir, lieux...) restent en français dans les 4 langues,
-   comme le fait la plupart des communautés Bleach avec la terminologie de
-   l'œuvre (Shinigami, Zanpakutō, Espada, Gotei 13...).
+   français si non supportée), puis mémorisée dans le navigateur. Les
+   caractéristiques propres à l'univers Bleach (race type Shinigami/Hollow/
+   Quincy, affiliations comme Gotei 13/Espada, types de pouvoir, noms
+   d'arcs...) restent en français dans les 4 langues, comme le fait la
+   plupart des communautés Bleach avec la terminologie de l'œuvre. Les
+   valeurs plus génériques (genre, statut vivant/mort, couleur de cheveux,
+   Oui/Non, tranche d'âge, "Humain", "Monde Humain"), elles, sont bien
+   traduites — y compris dans l'encyclopédie.
 
 ### Détails techniques
 

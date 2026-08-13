@@ -251,3 +251,70 @@ function setLang(lang) {
     // localStorage indisponible : la préférence ne survivra pas au rechargement, tant pis.
   }
 }
+
+// --- Traduction des valeurs "génériques" du dataset (affichage uniquement) ---
+// Contrairement à TRANSLATIONS (chrome d'UI), ceci traduit une partie des VALEURS de
+// characters.js à l'affichage, mais seulement les champs qui ne sont pas du jargon Bleach
+// (genre, statut, Oui/Non, une partie des lieux/couleurs de cheveux, "Humain" pour la race).
+// Les termes propres à l'œuvre (Shinigami, Zanpakutō, Espada, Gotei 13, Soul Society, Hueco
+// Mundo, Silbern, les affiliations, les noms d'arcs, les types de pouvoir...) restent en
+// français dans les 4 langues, comme documenté dans CLAUDE.md — ne pas les ajouter ici sans
+// revalider cette décision avec l'utilisateur. Le dataset lui-même (characters.js) n'est jamais
+// modifié : la comparaison de guess (compareAttribute) continue d'opérer sur les valeurs
+// françaises brutes, seul l'affichage (formatValue() dans game.js) passe par translateValue().
+const VALUE_TRANSLATIONS = {
+  gender: {
+    Homme: { en: "Male", es: "Hombre", de: "Mann" },
+    Femme: { en: "Female", es: "Mujer", de: "Frau" },
+  },
+  status: {
+    Vivant: { en: "Alive", es: "Vivo", de: "Lebendig" },
+    Mort: { en: "Dead", es: "Muerto", de: "Tot" },
+    Inconnu: { en: "Unknown", es: "Desconocido", de: "Unbekannt" },
+  },
+  bankaiOrResurreccion: {
+    Oui: { en: "Yes", es: "Sí", de: "Ja" },
+    Non: { en: "No", es: "No", de: "Nein" },
+  },
+  race: {
+    Humain: { en: "Human", es: "Humano", de: "Mensch" },
+  },
+  location: {
+    "Monde Humain": { en: "Human World", es: "Mundo Humano", de: "Menschenwelt" },
+    "Palais Royal": { en: "Royal Palace", es: "Palacio Real", de: "Königspalast" },
+  },
+  hairColor: {
+    Orange: { en: "Orange", es: "Naranja", de: "Orange" },
+    Noir: { en: "Black", es: "Negro", de: "Schwarz" },
+    Blond: { en: "Blonde", es: "Rubio", de: "Blond" },
+    Roux: { en: "Auburn", es: "Pelirrojo", de: "Rotbraun" },
+    Rouge: { en: "Red", es: "Rojo", de: "Rot" },
+    Argenté: { en: "Silver", es: "Plateado", de: "Silber" },
+    Châtain: { en: "Brown", es: "Castaño", de: "Braun" },
+    "Châtain clair": { en: "Light brown", es: "Castaño claro", de: "Hellbraun" },
+    Vert: { en: "Green", es: "Verde", de: "Grün" },
+    "Vert clair": { en: "Light green", es: "Verde claro", de: "Hellgrün" },
+    Bleu: { en: "Blue", es: "Azul", de: "Blau" },
+    Rose: { en: "Pink", es: "Rosa", de: "Pink" },
+    Blanc: { en: "White", es: "Blanco", de: "Weiß" },
+    Gris: { en: "Grey", es: "Gris", de: "Grau" },
+    Brun: { en: "Brown", es: "Marrón", de: "Braun" },
+    Violet: { en: "Purple", es: "Morado", de: "Lila" },
+    Aucun: { en: "None", es: "Ninguno", de: "Keine" },
+  },
+};
+
+function translateValue(fieldKey, value) {
+  if (currentLang === "fr") return value;
+  const entry = VALUE_TRANSLATIONS[fieldKey]?.[value];
+  if (!entry) return value;
+  return entry[currentLang] || value;
+}
+
+const AGE_UNIT_BY_LANG = { en: "years", es: "años", de: "Jahre" };
+
+function translateAgeBracket(value) {
+  if (currentLang === "fr" || !value) return value;
+  const unit = AGE_UNIT_BY_LANG[currentLang];
+  return unit ? value.replace("ans", unit) : value;
+}

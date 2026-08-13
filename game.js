@@ -119,11 +119,16 @@ function compareAttribute(attr, guessChar, targetChar) {
   }
 }
 
+// Traduit la valeur affichée pour les champs "génériques" (voir VALUE_TRANSLATIONS dans
+// i18n.js) ; les termes propres à l'univers Bleach restent en français quelle que soit la
+// langue. N'affecte que l'affichage : la comparaison de guess utilise toujours char[attr.key]
+// brut (français), jamais cette fonction.
 function formatValue(attr, char) {
   const val = char[attr.key];
   if (val === null || val === undefined) return "N/A";
-  if (Array.isArray(val)) return val.join(" / ");
-  return String(val);
+  if (attr.key === "ageBracket") return translateAgeBracket(val);
+  if (Array.isArray(val)) return val.map((v) => translateValue(attr.key, v)).join(" / ");
+  return translateValue(attr.key, val);
 }
 
 // --- État de partie persisté par jour ---
