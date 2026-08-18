@@ -15,6 +15,7 @@ const TRANSLATIONS = {
     searchPlaceholder: "Nom d'un personnage...",
     newGame: "Nouvelle partie",
     shareBtn: "📋 Partager mon résultat",
+    shareBtnInfinite: "📋 Partager le défi",
     shareFeedback: "Copié dans le presse-papier !",
     attemptsLeft: "Essais restants : {n}",
     winMessage: "Bravo ! Le personnage était bien {name}.",
@@ -55,6 +56,8 @@ const TRANSLATIONS = {
     shareResultWin: "Trouvé en {n}/{max} essais ✅",
     shareResultLose: "Perdu ({max}/{max}) ❌",
     sharePrompt: "À toi de jouer : {url}",
+    shareInfiniteTitle: "Bleachdle — Illimité",
+    shareInfiniteInvite: "Même tirage de personnages que moi, à toi de jouer : {url}",
   },
   en: {
     subtitleDaily: "Guess today's Bleach character.",
@@ -66,6 +69,7 @@ const TRANSLATIONS = {
     searchPlaceholder: "Character name...",
     newGame: "New game",
     shareBtn: "📋 Share my result",
+    shareBtnInfinite: "📋 Share the challenge",
     shareFeedback: "Copied to clipboard!",
     attemptsLeft: "Attempts left: {n}",
     winMessage: "Well done! The character was indeed {name}.",
@@ -106,6 +110,8 @@ const TRANSLATIONS = {
     shareResultWin: "Found in {n}/{max} guesses ✅",
     shareResultLose: "Lost ({max}/{max}) ❌",
     sharePrompt: "Your turn: {url}",
+    shareInfiniteTitle: "Bleachdle — Endless",
+    shareInfiniteInvite: "Same character draw as me, your turn: {url}",
   },
   es: {
     subtitleDaily: "Adivina el personaje de Bleach del día.",
@@ -117,6 +123,7 @@ const TRANSLATIONS = {
     searchPlaceholder: "Nombre de un personaje...",
     newGame: "Nueva partida",
     shareBtn: "📋 Compartir mi resultado",
+    shareBtnInfinite: "📋 Compartir el desafío",
     shareFeedback: "¡Copiado al portapapeles!",
     attemptsLeft: "Intentos restantes: {n}",
     winMessage: "¡Bien hecho! El personaje era {name}.",
@@ -157,6 +164,8 @@ const TRANSLATIONS = {
     shareResultWin: "Encontrado en {n}/{max} intentos ✅",
     shareResultLose: "Perdido ({max}/{max}) ❌",
     sharePrompt: "Tu turno: {url}",
+    shareInfiniteTitle: "Bleachdle — Infinito",
+    shareInfiniteInvite: "Mismo sorteo de personajes que yo, tu turno: {url}",
   },
   de: {
     subtitleDaily: "Errate die heutige Bleach-Figur.",
@@ -168,6 +177,7 @@ const TRANSLATIONS = {
     searchPlaceholder: "Name einer Figur...",
     newGame: "Neues Spiel",
     shareBtn: "📋 Ergebnis teilen",
+    shareBtnInfinite: "📋 Herausforderung teilen",
     shareFeedback: "In die Zwischenablage kopiert!",
     attemptsLeft: "Verbleibende Versuche: {n}",
     winMessage: "Gut gemacht! Die Figur war tatsächlich {name}.",
@@ -208,6 +218,8 @@ const TRANSLATIONS = {
     shareResultWin: "Gefunden in {n}/{max} Versuchen ✅",
     shareResultLose: "Verloren ({max}/{max}) ❌",
     sharePrompt: "Du bist dran: {url}",
+    shareInfiniteTitle: "Bleachdle — Endlos",
+    shareInfiniteInvite: "Gleiche Figuren-Ziehung wie ich, du bist dran: {url}",
   },
 };
 

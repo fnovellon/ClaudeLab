@@ -53,12 +53,22 @@ serveur statique, ex. `npx serve .`).
    - Le bouton "📊 Statistiques" (au-dessus du champ de recherche) permet de
      consulter ce panneau à tout moment, y compris en cours de partie, sans
      attendre la fin.
-6. En mode "Défi du jour", une fois la partie terminée, un bouton "📋
-   Partager mon résultat" copie dans le presse-papier un résumé façon
-   Wordle (numéro du défi, résultat, une grille avec une ligne par
-   tentative et une couleur par colonne — 🟩 identique, 🟨 partiel, ⬜
-   différent, même code couleur que le jeu) accompagné d'un lien vers le
-   jeu, pour inviter quelqu'un à essayer le même personnage du jour.
+6. Un bouton de partage copie un résumé dans le presse-papier :
+   - En "Défi du jour", une fois la partie terminée : "📋 Partager mon
+     résultat" (numéro du défi, résultat, une grille avec une ligne par
+     tentative et une couleur par colonne — 🟩 identique, 🟨 partiel, ⬜
+     différent, même code couleur que le jeu) accompagné d'un lien vers le
+     jeu, pour inviter quelqu'un à essayer le même personnage du jour.
+   - En "Illimité", à tout moment (même en cours de partie, puisque le
+     lien ne révèle rien) : "📋 Partager le défi" génère un lien avec une
+     seed dans l'URL (`?duel=...`) qui reproduit exactement le même tirage
+     de personnages chez la personne qui l'ouvre — elle démarre
+     automatiquement en mode Illimité avec le même premier personnage à
+     deviner, et la même séquence si les deux jouent en parallèle sans
+     décrocher. Une fois partagé, ce lien reste valable indéfiniment (le
+     même lien rejoue toujours le même tirage depuis le début) ; sans
+     partage, chaque rechargement de page repart sur un tirage aléatoire
+     comme avant.
 7. Le bouton "📖 Encyclopédie" ouvre un tableau consultable de tous les
    personnages du jeu, avec toutes leurs caractéristiques. Les colonnes sont
    triables (cliquer sur un en-tête, un second clic inverse l'ordre) et un

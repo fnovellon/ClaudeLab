@@ -229,11 +229,63 @@ function recordInfiniteResult(won, guessCount) {
 const INFINITE_NO_REPEAT_WINDOW = 7;
 let recentInfiniteNames = [];
 
+// --- Tirage Illimité reproductible (pour le partage d'un défi) ---
+// pickRandomCharacter() utilise un PRNG seedé (mulberry32) plutôt que Math.random() directement,
+// afin qu'une même seed produise toujours la même séquence de personnages. La seed elle-même
+// (infiniteSeed) n'est écrite dans l'URL qu'au moment où l'utilisateur clique "Partager" (voir
+// shareInfiniteURL()) — PAS à chaque partie — pour ne pas casser le comportement existant
+// "un F5 en mode Illimité repart sur un tirage totalement aléatoire" pour qui ne partage jamais.
+// Une fois qu'un lien a été partagé (ou ouvert via ?duel=...), l'URL contient la seed et un F5
+// ultérieur rejoue le même tirage depuis le début — c'est le comportement voulu pour ce cas-là.
+const DUEL_URL_PARAM = "duel";
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function readSeedFromURL() {
+  const raw = new URLSearchParams(window.location.search).get(DUEL_URL_PARAM);
+  const n = Number(raw);
+  return raw && Number.isFinite(n) && n > 0 ? n : null;
+}
+
+let infiniteSeed = null;
+let infiniteRng = Math.random;
+
+function ensureInfiniteSeed() {
+  if (infiniteSeed !== null) return;
+  infiniteSeed = readSeedFromURL() ?? Math.floor(Math.random() * 0xffffffff) + 1;
+  infiniteRng = mulberry32(infiniteSeed);
+}
+
+// N'écrit la seed dans l'URL qu'à l'appel (voir commentaire plus haut) ; renvoie l'URL complète
+// à copier dans le presse-papier.
+function shareInfiniteURL() {
+  const url = new URL(window.location.href);
+  url.searchParams.set(DUEL_URL_PARAM, String(infiniteSeed));
+  window.history.replaceState(null, "", url);
+  return url.toString();
+}
+
+function stripDuelParam() {
+  if (!window.location.search.includes(DUEL_URL_PARAM)) return;
+  const url = new URL(window.location.href);
+  url.searchParams.delete(DUEL_URL_PARAM);
+  window.history.replaceState(null, "", url);
+}
+
 function pickRandomCharacter(excludeNames) {
   const excludeSet = new Set(excludeNames || []);
   let pool = CHARACTERS.filter((c) => !excludeSet.has(c.name));
   if (pool.length === 0) pool = CHARACTERS;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pool[Math.floor(infiniteRng() * pool.length)];
 }
 
 // --- UI ---
@@ -536,11 +588,16 @@ function isEncyclopediaAllowed() {
   return state.finished || state.guesses.length === 0;
 }
 
-// Bouton "Encyclopédie" désactivé et bouton "Partager" masqué tant qu'une partie est en cours,
-// synchronisés à chaque changement d'état de partie (tentative soumise, fin de partie, nouvelle
-// partie, reload).
+// Bouton "Encyclopédie" désactivé tant qu'une partie est en cours ; bouton "Partager" visible en
+// Défi du jour seulement une fois la partie finie (résultat à partager), et en Illimité en
+// permanence (partager le tirage/lien ne révèle rien, donc pas besoin d'attendre la fin) — avec
+// un libellé différent selon le mode. Synchronisés à chaque changement d'état de partie
+// (tentative soumise, fin de partie, nouvelle partie, reload).
 function syncGameControls() {
-  if (shareBtn) shareBtn.hidden = !(mode === "daily" && state.finished);
+  if (shareBtn) {
+    shareBtn.hidden = !((mode === "daily" && state.finished) || mode === "infinite");
+    shareBtn.textContent = mode === "daily" ? t("shareBtn") : t("shareBtnInfinite");
+  }
   if (encyclopediaBtn) {
     const allowed = isEncyclopediaAllowed();
     encyclopediaBtn.disabled = !allowed;
@@ -548,16 +605,12 @@ function syncGameControls() {
   }
 }
 
-// Texte de partage façon Wordle : numéro du défi, résultat, puis une grille d'émojis avec une
-// ligne par tentative et une colonne par attribut (même ordre que ATTRIBUTES, donc que les
-// colonnes du tableau de jeu) : 🟩 = attribut identique, 🟨 = partiel, ⬜ = différent. Reprend
+// Grille d'émojis partagée par buildShareText() (Défi du jour) et buildInfiniteShareText()
+// (Illimité) : une ligne par tentative, une colonne par attribut (même ordre que ATTRIBUTES,
+// donc que les colonnes du tableau de jeu) — 🟩 identique, 🟨 partiel, ⬜ différent. Reprend
 // directement le code couleur déjà utilisé dans le jeu, donc pas besoin de légende séparée.
-function buildShareText() {
-  const puzzleNumber = getDailyPuzzleNumber();
-  const resultLine = state.won
-    ? t("shareResultWin", { n: state.guesses.length, max: MAX_ATTEMPTS })
-    : t("shareResultLose", { max: MAX_ATTEMPTS });
-  const rows = state.guesses.map((name) => {
+function buildGuessGridRows() {
+  return state.guesses.map((name) => {
     const guessChar = findCharacterByName(name);
     return ATTRIBUTES.map((attr) => {
       const result = compareAttribute(attr, guessChar, target);
@@ -566,14 +619,40 @@ function buildShareText() {
       return "⬜";
     }).join("");
   });
+}
+
+// Texte de partage façon Wordle pour le Défi du jour : numéro du défi, résultat, grille, lien.
+function buildShareText() {
+  const puzzleNumber = getDailyPuzzleNumber();
+  const resultLine = state.won
+    ? t("shareResultWin", { n: state.guesses.length, max: MAX_ATTEMPTS })
+    : t("shareResultLose", { max: MAX_ATTEMPTS });
+  const rows = buildGuessGridRows();
   const title = `${t("shareTitle", { n: puzzleNumber })} — ${resultLine}`;
   return [title, ...rows, "", t("sharePrompt", { url: window.location.href })].join("\n");
+}
+
+// Texte de partage pour le mode Illimité : invite un ami à jouer le même tirage de personnages
+// (seed dans l'URL, voir shareInfiniteURL()). Si la partie en cours est terminée, inclut aussi
+// son résultat/sa grille ; sinon juste l'invitation, puisque partager en cours de partie ne
+// révèle rien (le destinataire commence sa propre partie contre le même personnage).
+function buildInfiniteShareText() {
+  const url = shareInfiniteURL();
+  const invite = t("shareInfiniteInvite", { url });
+  if (!state.finished) {
+    return [t("shareInfiniteTitle"), "", invite].join("\n");
+  }
+  const resultLine = state.won
+    ? t("shareResultWin", { n: state.guesses.length, max: MAX_ATTEMPTS })
+    : t("shareResultLose", { max: MAX_ATTEMPTS });
+  const rows = buildGuessGridRows();
+  return [`${t("shareInfiniteTitle")} — ${resultLine}`, ...rows, "", invite].join("\n");
 }
 
 let shareFeedbackTimeout = null;
 
 async function copyShareText() {
-  const text = buildShareText();
+  const text = mode === "daily" ? buildShareText() : buildInfiniteShareText();
   try {
     await navigator.clipboard.writeText(text);
   } catch {
@@ -740,6 +819,7 @@ function resetBoard() {
 }
 
 function startDailyMode() {
+  stripDuelParam();
   target = getDailyCharacter();
   state = loadState();
   resetBoard();
@@ -747,6 +827,7 @@ function startDailyMode() {
 }
 
 function startInfiniteMode() {
+  ensureInfiniteSeed();
   target = pickRandomCharacter(recentInfiniteNames);
   recentInfiniteNames.push(target.name);
   if (recentInfiniteNames.length > INFINITE_NO_REPEAT_WINDOW) {
@@ -792,7 +873,6 @@ function applyLanguage() {
   if (statsToggleBtn) statsToggleBtn.textContent = t("statsToggle");
   if (encyclopediaBtn) encyclopediaBtn.textContent = t("encyclopediaBtn");
   newGameBtn.textContent = t("newGame");
-  if (shareBtn) shareBtn.textContent = t("shareBtn");
   if (shareFeedbackEl) shareFeedbackEl.textContent = t("shareFeedback");
   subtitleEl.textContent = mode === "daily" ? t("subtitleDaily") : t("subtitleInfinite");
 
@@ -888,4 +968,5 @@ if (langSwitcherEl) {
 
 applyLanguage();
 if (versionTagEl) versionTagEl.textContent = `v${APP_VERSION}`;
-setMode("daily");
+// Ouvrir un lien de défi (?duel=<seed>) démarre directement en mode Illimité avec ce tirage.
+setMode(readSeedFromURL() !== null ? "infinite" : "daily");
