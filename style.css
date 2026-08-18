@@ -197,6 +197,177 @@ main {
   color: var(--correct);
 }
 
+.infinite-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.session-config-panel {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem 1.25rem;
+  margin: 0.75rem 0 1.5rem;
+}
+
+.session-config-panel h3 {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  text-align: center;
+  color: var(--text);
+}
+
+.session-config-row {
+  margin-bottom: 0.9rem;
+}
+
+.session-config-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.session-pill-group {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.session-pill {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.session-pill:hover {
+  border-color: var(--accent);
+}
+
+.session-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.session-config-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.session-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.session-progress[hidden] {
+  display: none;
+}
+
+.session-quit-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.1rem 0.35rem;
+  line-height: 1;
+}
+
+.session-quit-btn:hover {
+  color: #e05c5c;
+}
+
+.session-results-panel {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem 1.25rem;
+  margin: 0.75rem 0 1.5rem;
+  text-align: center;
+}
+
+.session-results-panel h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.session-timeout-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: #e05c5c;
+  font-weight: 600;
+}
+
+.session-results-summary {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.session-results-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.session-round-badge {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.session-round-badge.won {
+  background: var(--correct);
+}
+
+.session-round-badge.lost {
+  background: var(--incorrect);
+}
+
+.session-results-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .search-box {
   position: relative;
   width: 100%;

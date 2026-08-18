@@ -238,6 +238,8 @@ let recentInfiniteNames = [];
 // Une fois qu'un lien a été partagé (ou ouvert via ?duel=...), l'URL contient la seed et un F5
 // ultérieur rejoue le même tirage depuis le début — c'est le comportement voulu pour ce cas-là.
 const DUEL_URL_PARAM = "duel";
+const SESSION_COUNT_URL_PARAM = "count";
+const SESSION_TIME_URL_PARAM = "time";
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -256,8 +258,26 @@ function readSeedFromURL() {
   return raw && Number.isFinite(n) && n > 0 ? n : null;
 }
 
+// Un lien de session (partagé via shareSessionURL()) ajoute count/time à côté de duel ; un
+// lien de simple duel (un seul personnage, shareInfiniteURL()) n'a que duel — d'où null ici,
+// ce qui laisse le boot retomber sur le comportement libre existant pour ces anciens liens.
+function readSessionParamsFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const countRaw = params.get(SESSION_COUNT_URL_PARAM);
+  const count = Number(countRaw);
+  if (!countRaw || !Number.isFinite(count) || count <= 0) return null;
+  const timeRaw = params.get(SESSION_TIME_URL_PARAM);
+  const timeSeconds = Number(timeRaw);
+  return { count, timeSeconds: Number.isFinite(timeSeconds) && timeSeconds >= 0 ? timeSeconds : 0 };
+}
+
 let infiniteSeed = null;
 let infiniteRng = Math.random;
+
+// Calculé une seule fois au chargement du script : si le lien ouvert contient une config de
+// session (count/time en plus de duel), la toute première entrée en mode Illimité démarre
+// directement cette session au lieu d'une partie libre — voir setMode().
+let pendingSessionParamsFromURL = readSessionParamsFromURL();
 
 function ensureInfiniteSeed() {
   if (infiniteSeed !== null) return;
@@ -274,10 +294,24 @@ function shareInfiniteURL() {
   return url.toString();
 }
 
+// Comme shareInfiniteURL(), mais ajoute aussi le nombre de manches et la limite de temps de la
+// session en cours, pour que le lien reproduise la session entière (même seed, même longueur,
+// même minuteur) et pas juste un seul personnage.
+function shareSessionURL() {
+  const url = new URL(window.location.href);
+  url.searchParams.set(DUEL_URL_PARAM, String(infiniteSeed));
+  url.searchParams.set(SESSION_COUNT_URL_PARAM, String(session.total));
+  url.searchParams.set(SESSION_TIME_URL_PARAM, String(sessionConfig.timeSeconds));
+  window.history.replaceState(null, "", url);
+  return url.toString();
+}
+
 function stripDuelParam() {
   if (!window.location.search.includes(DUEL_URL_PARAM)) return;
   const url = new URL(window.location.href);
   url.searchParams.delete(DUEL_URL_PARAM);
+  url.searchParams.delete(SESSION_COUNT_URL_PARAM);
+  url.searchParams.delete(SESSION_TIME_URL_PARAM);
   window.history.replaceState(null, "", url);
 }
 
@@ -286,6 +320,215 @@ function pickRandomCharacter(excludeNames) {
   let pool = CHARACTERS.filter((c) => !excludeSet.has(c.name));
   if (pool.length === 0) pool = CHARACTERS;
   return pool[Math.floor(infiniteRng() * pool.length)];
+}
+
+// --- Session Illimité (série de N personnages, chronométrée en option) ---
+// Une "session" enchaîne N manches (chacune = une manche Illimité normale, même mécanique de
+// jeu/stats/seed) via un bouton "Continuer" plutôt qu'un ré-tirage manuel, avec un score cumulé
+// et, en option, un minuteur global qui termine la session dès qu'il expire. C'est une couche
+// au-dessus du mode Illimité "libre" existant, pas un remplacement : newGameBtn (partie libre
+// instantanée) garde exactement son comportement d'origine, sessionModeBtn ouvre la config pour
+// qui veut une série. session === null signifie "pas de session active" (partie libre normale).
+const SESSION_COUNT_OPTIONS = [5, 10, 15, 20];
+const SESSION_TIME_OPTIONS = [0, 60, 120, 180, 300];
+const SESSION_SCORE_PER_GUESS_STEP = 10;
+
+let sessionConfig = { count: 10, timeSeconds: 0 };
+let sessionConfigOpen = false;
+let session = null;
+let sessionTimerInterval = null;
+
+// Score d'une manche : 0 si perdue, sinon dégressif selon le nombre d'essais utilisés
+// (MAX_ATTEMPTS+1-essais) * 10 — deviner en 1 essai rapporte le plus de points.
+function pointsForRound(won, guessCount) {
+  if (!won) return 0;
+  return (MAX_ATTEMPTS + 1 - guessCount) * SESSION_SCORE_PER_GUESS_STEP;
+}
+
+function stopSessionTimer() {
+  if (sessionTimerInterval !== null) {
+    window.clearInterval(sessionTimerInterval);
+    sessionTimerInterval = null;
+  }
+}
+
+function resetInfiniteSession() {
+  stopSessionTimer();
+  session = null;
+  sessionConfigOpen = false;
+}
+
+function formatSessionTime(totalSeconds) {
+  const s = Math.max(0, Math.ceil(totalSeconds));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
+
+function updateSessionTimerDisplay() {
+  if (!session || !session.deadline || !sessionTimerTextEl) return;
+  sessionTimerTextEl.hidden = false;
+  sessionTimerTextEl.textContent = `⏱ ${formatSessionTime((session.deadline - Date.now()) / 1000)}`;
+}
+
+function startSessionTimer() {
+  stopSessionTimer();
+  updateSessionTimerDisplay();
+  sessionTimerInterval = window.setInterval(() => {
+    if (!session || !session.deadline) {
+      stopSessionTimer();
+      return;
+    }
+    if (Date.now() >= session.deadline) {
+      session.timedOut = true;
+      stopSessionTimer();
+      finishSession();
+      return;
+    }
+    updateSessionTimerDisplay();
+  }, 250);
+}
+
+function renderSessionProgress() {
+  if (!session || !sessionProgressTextEl) return;
+  const currentRound = session.phase === "roundEnd" ? session.results.length : session.results.length + 1;
+  sessionProgressTextEl.textContent = t("sessionProgressText", { current: currentRound, total: session.total });
+  sessionScoreTextEl.textContent = t("sessionScoreText", { score: session.score });
+  if (session.deadline) {
+    updateSessionTimerDisplay();
+  } else if (sessionTimerTextEl) {
+    sessionTimerTextEl.hidden = true;
+  }
+}
+
+function renderSessionResults() {
+  if (!session || !sessionResultsGridEl) return;
+  const found = session.results.filter((r) => r.won).length;
+  if (sessionResultsTimeoutNoteEl) sessionResultsTimeoutNoteEl.hidden = !session.timedOut;
+  if (sessionResultsFoundEl) sessionResultsFoundEl.textContent = t("sessionResultsFound", { found, total: session.results.length });
+  if (sessionResultsScoreEl) sessionResultsScoreEl.textContent = t("sessionResultsScore", { score: session.score });
+  sessionResultsGridEl.innerHTML = "";
+  session.results.forEach((r, i) => {
+    const badge = document.createElement("span");
+    badge.className = `session-round-badge ${r.won ? "won" : "lost"}`;
+    badge.textContent = r.won ? "✓" : "✕";
+    badge.title = `#${i + 1}`;
+    sessionResultsGridEl.appendChild(badge);
+  });
+}
+
+function startSessionRound() {
+  ensureInfiniteSeed();
+  target = pickRandomCharacter(recentInfiniteNames);
+  recentInfiniteNames.push(target.name);
+  if (recentInfiniteNames.length > INFINITE_NO_REPEAT_WINDOW) {
+    recentInfiniteNames = recentInfiniteNames.slice(-INFINITE_NO_REPEAT_WINDOW);
+  }
+  state = { guesses: [], finished: false, won: false };
+  session.phase = "playing";
+  resetBoard();
+  updateAttemptsLeft();
+  renderSessionProgress();
+}
+
+function beginSession(count, timeSeconds) {
+  sessionConfig = { count, timeSeconds };
+  sessionConfigOpen = false;
+  // Réinitialise le flux du PRNG à la position 0 pour la seed courante : si le joueur a déjà
+  // joué en libre avant de lancer une session (le tout premier tirage d'Illimité en consomme
+  // déjà une valeur), la session doit repartir de zéro pour que la seed partagée corresponde
+  // bien à la manche 1 côté destinataire, quel que soit l'historique du partageur avant de
+  // démarrer sa session.
+  ensureInfiniteSeed();
+  infiniteRng = mulberry32(infiniteSeed);
+  recentInfiniteNames = [];
+  session = {
+    total: count,
+    score: 0,
+    results: [],
+    deadline: timeSeconds > 0 ? Date.now() + timeSeconds * 1000 : null,
+    timedOut: false,
+    phase: "playing",
+  };
+  if (session.deadline) startSessionTimer();
+  startSessionRound();
+}
+
+// Appelé depuis endGame() quand une manche de session se termine (gagnée ou perdue) : cumule le
+// score, passe à la manche suivante (bouton Continuer) ou termine la session si c'était la
+// dernière manche prévue.
+function onSessionRoundResolved() {
+  if (!session) return;
+  session.score += pointsForRound(state.won, state.guesses.length);
+  session.results.push({ won: state.won, guesses: state.guesses.length });
+  if (session.results.length >= session.total) {
+    finishSession();
+  } else {
+    session.phase = "roundEnd";
+    syncInfiniteUI();
+    renderSessionProgress();
+    if (sessionContinueBtn) sessionContinueBtn.focus();
+  }
+}
+
+function finishSession() {
+  stopSessionTimer();
+  if (session) session.phase = "results";
+  syncGameControls();
+  syncInfiniteUI();
+  renderSessionResults();
+}
+
+// Bascule la visibilité de tout ce qui est spécifique au mode Illimité "session" (config, barre
+// de progression/score/minuteur, bouton Continuer, écran de résultats) en fonction de l'état
+// courant (sessionConfigOpen / session), et masque le plateau de jeu normal (champ de recherche,
+// tableau, essais/message) pendant la config et l'écran de résultats puisqu'aucune manche n'est
+// alors en cours.
+function syncInfiniteUI() {
+  if (!sessionConfigPanel) return;
+  if (mode !== "infinite") {
+    sessionConfigPanel.hidden = true;
+    sessionProgressEl.hidden = true;
+    sessionContinueBtn.hidden = true;
+    sessionResultsPanel.hidden = true;
+    if (searchBoxEl) searchBoxEl.hidden = false;
+    if (tableWrapperEl) tableWrapperEl.hidden = false;
+    attemptsLeftEl.hidden = false;
+    messageEl.hidden = false;
+    syncGameControls();
+    return;
+  }
+
+  const inSession = session !== null;
+  const showFreeButtons = !sessionConfigOpen && !inSession;
+  if (newGameBtn) newGameBtn.hidden = !showFreeButtons;
+  if (sessionModeBtn) sessionModeBtn.hidden = !showFreeButtons;
+  sessionConfigPanel.hidden = !sessionConfigOpen;
+
+  const playingPhase = inSession && session.phase === "playing";
+  const roundEndPhase = inSession && session.phase === "roundEnd";
+  const resultsPhase = inSession && session.phase === "results";
+
+  sessionProgressEl.hidden = !(playingPhase || roundEndPhase);
+  sessionContinueBtn.hidden = !roundEndPhase;
+  sessionResultsPanel.hidden = !resultsPhase;
+
+  const hideBoard = sessionConfigOpen || resultsPhase;
+  if (searchBoxEl) searchBoxEl.hidden = hideBoard;
+  if (tableWrapperEl) tableWrapperEl.hidden = hideBoard;
+  attemptsLeftEl.hidden = hideBoard;
+  messageEl.hidden = hideBoard;
+  syncGameControls();
+}
+
+function syncSessionPills() {
+  if (!sessionCountPills) return;
+  sessionCountPills.querySelectorAll(".session-pill").forEach((btn) => {
+    btn.classList.toggle("active", Number(btn.dataset.count) === sessionConfig.count);
+  });
+  sessionTimePills.querySelectorAll(".session-pill").forEach((btn) => {
+    btn.classList.toggle("active", Number(btn.dataset.seconds) === sessionConfig.timeSeconds);
+  });
 }
 
 // --- UI ---
@@ -347,6 +590,31 @@ const legendPartialEl = document.getElementById("legendPartial");
 const legendIncorrectEl = document.getElementById("legendIncorrect");
 const legendArrowEl = document.getElementById("legendArrow");
 const legendAgeEl = document.getElementById("legendAge");
+const searchBoxEl = document.querySelector(".search-box");
+const tableWrapperEl = document.querySelector(".table-wrapper");
+const sessionModeBtn = document.getElementById("sessionModeBtn");
+const sessionConfigPanel = document.getElementById("sessionConfigPanel");
+const sessionConfigTitleEl = document.getElementById("sessionConfigTitle");
+const sessionCountLabelEl = document.getElementById("sessionCountLabel");
+const sessionTimeLabelEl = document.getElementById("sessionTimeLabel");
+const sessionCountPills = document.getElementById("sessionCountPills");
+const sessionTimePills = document.getElementById("sessionTimePills");
+const sessionStartBtn = document.getElementById("sessionStartBtn");
+const sessionCancelBtn = document.getElementById("sessionCancelBtn");
+const sessionProgressEl = document.getElementById("sessionProgress");
+const sessionProgressTextEl = document.getElementById("sessionProgressText");
+const sessionScoreTextEl = document.getElementById("sessionScoreText");
+const sessionTimerTextEl = document.getElementById("sessionTimerText");
+const sessionQuitBtn = document.getElementById("sessionQuitBtn");
+const sessionContinueBtn = document.getElementById("sessionContinueBtn");
+const sessionResultsPanel = document.getElementById("sessionResultsPanel");
+const sessionResultsTitleEl = document.getElementById("sessionResultsTitle");
+const sessionResultsTimeoutNoteEl = document.getElementById("sessionResultsTimeoutNote");
+const sessionResultsFoundEl = document.getElementById("sessionResultsFound");
+const sessionResultsScoreEl = document.getElementById("sessionResultsScore");
+const sessionResultsGridEl = document.getElementById("sessionResultsGrid");
+const sessionShareBtn = document.getElementById("sessionShareBtn");
+const sessionRestartBtn = document.getElementById("sessionRestartBtn");
 
 // Bascule manuelle indépendante de la fin de partie (voir statsToggleBtn) : permet de
 // consulter les stats à tout moment, en plus de l'affichage automatique en fin de partie.
@@ -588,14 +856,16 @@ function isEncyclopediaAllowed() {
   return state.finished || state.guesses.length === 0;
 }
 
-// Bouton "Encyclopédie" désactivé tant qu'une partie est en cours ; bouton "Partager" visible en
-// Défi du jour seulement une fois la partie finie (résultat à partager), et en Illimité en
-// permanence (partager le tirage/lien ne révèle rien, donc pas besoin d'attendre la fin) — avec
-// un libellé différent selon le mode. Synchronisés à chaque changement d'état de partie
+// Bouton "Encyclopédie" désactivé tant qu'une partie est en cours ; bouton "Partager" (défi
+// simple, une seule cible) visible en Défi du jour seulement une fois la partie finie, et en
+// Illimité hors session (partager le tirage/lien ne révèle rien, donc pas besoin d'attendre la
+// fin) — masqué pendant une session, qui a son propre bouton de partage en fin de série
+// (sessionShareBtn, voir finishSession()). Synchronisés à chaque changement d'état de partie
 // (tentative soumise, fin de partie, nouvelle partie, reload).
 function syncGameControls() {
   if (shareBtn) {
-    shareBtn.hidden = !((mode === "daily" && state.finished) || mode === "infinite");
+    const showInfiniteShare = mode === "infinite" && session === null && !sessionConfigOpen;
+    shareBtn.hidden = !((mode === "daily" && state.finished) || showInfiniteShare);
     shareBtn.textContent = mode === "daily" ? t("shareBtn") : t("shareBtnInfinite");
   }
   if (encyclopediaBtn) {
@@ -649,10 +919,21 @@ function buildInfiniteShareText() {
   return [`${t("shareInfiniteTitle")} — ${resultLine}`, ...rows, "", invite].join("\n");
 }
 
+// Texte de partage d'une session terminée : score, X/N trouvés, une ligne compacte ✅/❌ par
+// manche (une grille par-attribut comme buildShareText() serait illisible sur N manches), et un
+// lien reproduisant la session entière (seed + nombre de manches + limite de temps).
+function buildSessionShareText() {
+  const url = shareSessionURL();
+  const found = session.results.filter((r) => r.won).length;
+  const resultLine = t("shareSessionResult", { found, total: session.results.length, score: session.score });
+  const rounds = session.results.map((r) => (r.won ? "✅" : "❌")).join("");
+  const invite = t("shareSessionInvite", { total: session.total, url });
+  return [`${t("shareSessionTitle")} — ${resultLine}`, rounds, "", invite].join("\n");
+}
+
 let shareFeedbackTimeout = null;
 
-async function copyShareText() {
-  const text = mode === "daily" ? buildShareText() : buildInfiniteShareText();
+async function copyTextToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
   } catch {
@@ -672,6 +953,15 @@ async function copyShareText() {
       shareFeedbackEl.hidden = true;
     }, 2500);
   }
+}
+
+async function copyShareText() {
+  await copyTextToClipboard(mode === "daily" ? buildShareText() : buildInfiniteShareText());
+}
+
+async function copySessionShareText() {
+  if (!session) return;
+  await copyTextToClipboard(buildSessionShareText());
 }
 
 // Rejoue le message de fin de partie à partir de l'état courant, sans effet de bord (pas
@@ -698,6 +988,7 @@ function endGame(won) {
     saveState(state);
   } else {
     recordInfiniteResult(won, state.guesses.length);
+    if (session) onSessionRoundResolved();
   }
   guessInput.disabled = true;
   renderMessage();
@@ -816,9 +1107,11 @@ function resetBoard() {
   if (encyclopediaModal) encyclopediaModal.hidden = true;
   updateStatsVisibility();
   syncGameControls();
+  syncInfiniteUI();
 }
 
 function startDailyMode() {
+  resetInfiniteSession();
   stripDuelParam();
   target = getDailyCharacter();
   state = loadState();
@@ -827,6 +1120,7 @@ function startDailyMode() {
 }
 
 function startInfiniteMode() {
+  resetInfiniteSession();
   ensureInfiniteSeed();
   target = pickRandomCharacter(recentInfiniteNames);
   recentInfiniteNames.push(target.name);
@@ -846,6 +1140,11 @@ function setMode(newMode) {
   subtitleEl.textContent = mode === "daily" ? t("subtitleDaily") : t("subtitleInfinite");
   if (mode === "daily") {
     startDailyMode();
+  } else if (pendingSessionParamsFromURL) {
+    const params = pendingSessionParamsFromURL;
+    pendingSessionParamsFromURL = null;
+    resetInfiniteSession();
+    beginSession(params.count, params.timeSeconds);
   } else {
     startInfiniteMode();
   }
@@ -886,6 +1185,25 @@ function applyLanguage() {
   if (encyclopediaCloseBtn) encyclopediaCloseBtn.setAttribute("aria-label", t("encyclopediaClose"));
   if (encyclopediaSearchInput) encyclopediaSearchInput.placeholder = t("encyclopediaSearchPlaceholder");
 
+  if (sessionModeBtn) sessionModeBtn.textContent = t("sessionModeBtn");
+  if (sessionConfigTitleEl) sessionConfigTitleEl.textContent = t("sessionConfigTitle");
+  if (sessionCountLabelEl) sessionCountLabelEl.textContent = t("sessionCountLabel");
+  if (sessionTimeLabelEl) sessionTimeLabelEl.textContent = t("sessionTimeLabel");
+  if (sessionStartBtn) sessionStartBtn.textContent = t("sessionStartBtn");
+  if (sessionCancelBtn) sessionCancelBtn.textContent = t("sessionCancelBtn");
+  if (sessionContinueBtn) sessionContinueBtn.textContent = t("sessionContinueBtn");
+  if (sessionQuitBtn) sessionQuitBtn.setAttribute("aria-label", t("sessionQuitBtn"));
+  if (sessionResultsTitleEl) sessionResultsTitleEl.textContent = t("sessionResultsTitle");
+  if (sessionResultsTimeoutNoteEl) sessionResultsTimeoutNoteEl.textContent = t("sessionResultsTimeout");
+  if (sessionShareBtn) sessionShareBtn.textContent = t("sessionShareBtn");
+  if (sessionRestartBtn) sessionRestartBtn.textContent = t("sessionRestartBtn");
+  if (sessionTimePills) {
+    sessionTimePills.querySelectorAll(".session-pill").forEach((btn) => {
+      const seconds = Number(btn.dataset.seconds);
+      btn.textContent = seconds === 0 ? t("sessionTimeNone") : t("sessionTimeMinutes", { n: seconds / 60 });
+    });
+  }
+
   buildHeader();
   rerenderResultsBody();
   updateAttemptsLeft();
@@ -896,6 +1214,10 @@ function applyLanguage() {
   if (encyclopediaModal && !encyclopediaModal.hidden) {
     buildEncyclopediaHeader();
     renderEncyclopediaTable();
+  }
+  if (session) {
+    renderSessionProgress();
+    if (session.phase === "results") renderSessionResults();
   }
 }
 
@@ -932,6 +1254,59 @@ dailyModeBtn.addEventListener("click", () => setMode("daily"));
 infiniteModeBtn.addEventListener("click", () => setMode("infinite"));
 newGameBtn.addEventListener("click", () => startInfiniteMode());
 
+if (sessionModeBtn) {
+  sessionModeBtn.addEventListener("click", () => {
+    sessionConfigOpen = true;
+    syncSessionPills();
+    syncInfiniteUI();
+  });
+}
+if (sessionCancelBtn) {
+  sessionCancelBtn.addEventListener("click", () => {
+    sessionConfigOpen = false;
+    syncInfiniteUI();
+  });
+}
+if (sessionStartBtn) {
+  sessionStartBtn.addEventListener("click", () => {
+    beginSession(sessionConfig.count, sessionConfig.timeSeconds);
+  });
+}
+if (sessionContinueBtn) {
+  sessionContinueBtn.addEventListener("click", () => {
+    if (session) startSessionRound();
+  });
+}
+if (sessionQuitBtn) {
+  sessionQuitBtn.addEventListener("click", () => {
+    if (session) finishSession();
+  });
+}
+if (sessionRestartBtn) {
+  sessionRestartBtn.addEventListener("click", () => {
+    session = null;
+    sessionConfigOpen = true;
+    syncSessionPills();
+    syncInfiniteUI();
+  });
+}
+if (sessionCountPills) {
+  sessionCountPills.querySelectorAll(".session-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sessionConfig.count = Number(btn.dataset.count);
+      syncSessionPills();
+    });
+  });
+}
+if (sessionTimePills) {
+  sessionTimePills.querySelectorAll(".session-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sessionConfig.timeSeconds = Number(btn.dataset.seconds);
+      syncSessionPills();
+    });
+  });
+}
+
 if (statsToggleBtn) {
   statsToggleBtn.addEventListener("click", () => {
     statsOpen = !statsOpen;
@@ -942,6 +1317,12 @@ if (statsToggleBtn) {
 if (shareBtn) {
   shareBtn.addEventListener("click", () => {
     copyShareText();
+  });
+}
+
+if (sessionShareBtn) {
+  sessionShareBtn.addEventListener("click", () => {
+    copySessionShareText();
   });
 }
 
@@ -966,6 +1347,7 @@ if (langSwitcherEl) {
   });
 }
 
+syncSessionPills();
 applyLanguage();
 if (versionTagEl) versionTagEl.textContent = `v${APP_VERSION}`;
 // Ouvrir un lien de défi (?duel=<seed>) démarre directement en mode Illimité avec ce tirage.

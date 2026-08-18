@@ -36,7 +36,19 @@ serveur statique, ex. `npx serve .`).
    plusieurs fois le même jour. En mode "Illimité", rien n'est sauvegardé :
    le bouton "Nouvelle partie" relance immédiatement avec un autre
    personnage aléatoire.
-5. À la fin de chaque partie, un panneau de statistiques s'affiche (parties
+5. En mode "Illimité", le bouton "🎯 Mode Session" permet de configurer une
+   série de personnages à deviner à la suite (5, 10, 15 ou 20 au choix),
+   avec une limite de temps optionnelle pour toute la session (1 à 5 min).
+   Chaque personnage trouvé rapporte des points selon le nombre d'essais
+   utilisés (moins d'essais = plus de points), pour un score total affiché
+   à la fin. Le jeu passe au personnage suivant via un bouton "Continuer"
+   (pas d'enchaînement automatique, pour laisser le temps de voir chaque
+   résultat) et peut être interrompu à tout moment via le bouton
+   d'abandon ; si la limite de temps expire, la session s'arrête
+   immédiatement avec le score obtenu jusque-là. Cette option est en plus
+   du mode libre existant ("Nouvelle partie" continue de fonctionner
+   comme avant, sans configuration ni score).
+6. À la fin de chaque partie, un panneau de statistiques s'affiche (parties
    jouées, % de victoires, série actuelle et record, répartition du nombre
    d'essais utilisés lors des victoires) :
    - En mode "Défi du jour", ces statistiques sont cumulées dans le
@@ -53,23 +65,28 @@ serveur statique, ex. `npx serve .`).
    - Le bouton "📊 Statistiques" (au-dessus du champ de recherche) permet de
      consulter ce panneau à tout moment, y compris en cours de partie, sans
      attendre la fin.
-6. Un bouton de partage copie un résumé dans le presse-papier :
+7. Un bouton de partage copie un résumé dans le presse-papier :
    - En "Défi du jour", une fois la partie terminée : "📋 Partager mon
      résultat" (numéro du défi, résultat, une grille avec une ligne par
      tentative et une couleur par colonne — 🟩 identique, 🟨 partiel, ⬜
      différent, même code couleur que le jeu) accompagné d'un lien vers le
      jeu, pour inviter quelqu'un à essayer le même personnage du jour.
-   - En "Illimité", à tout moment (même en cours de partie, puisque le
-     lien ne révèle rien) : "📋 Partager le défi" génère un lien avec une
-     seed dans l'URL (`?duel=...`) qui reproduit exactement le même tirage
-     de personnages chez la personne qui l'ouvre — elle démarre
+   - En "Illimité" libre, à tout moment (même en cours de partie, puisque
+     le lien ne révèle rien) : "📋 Partager le défi" génère un lien avec
+     une seed dans l'URL (`?duel=...`) qui reproduit exactement le même
+     tirage de personnages chez la personne qui l'ouvre — elle démarre
      automatiquement en mode Illimité avec le même premier personnage à
      deviner, et la même séquence si les deux jouent en parallèle sans
      décrocher. Une fois partagé, ce lien reste valable indéfiniment (le
      même lien rejoue toujours le même tirage depuis le début) ; sans
      partage, chaque rechargement de page repart sur un tirage aléatoire
      comme avant.
-7. Le bouton "📖 Encyclopédie" ouvre un tableau consultable de tous les
+   - En fin de session Illimité (voir point 5) : "📋 Partager la session"
+     copie le score, le nombre de personnages trouvés, un récapitulatif
+     ✅/❌ par manche, et un lien qui reproduit la session entière chez le
+     destinataire (même tirage, même nombre de personnages, même limite
+     de temps) pour qu'il puisse essayer de battre le score.
+8. Le bouton "📖 Encyclopédie" ouvre un tableau consultable de tous les
    personnages du jeu, avec toutes leurs caractéristiques. Les colonnes sont
    triables (cliquer sur un en-tête, un second clic inverse l'ordre) et un
    champ de recherche filtre par nom (accents ignorés). Ce bouton est
@@ -77,7 +94,7 @@ serveur statique, ex. `npx serve .`).
    partie (dans n'importe quel mode), pour ne pas s'en servir comme
    antisèche en cours de partie — il reste accessible avant la toute
    première tentative, et se redébloque une fois la partie terminée.
-8. L'interface est disponible en français, anglais, espagnol et allemand
+9. L'interface est disponible en français, anglais, espagnol et allemand
    (sélecteur FR/EN/ES/DE sous le titre). La langue est détectée
    automatiquement à la première visite (langue du navigateur, repli sur le
    français si non supportée), puis mémorisée dans le navigateur. Les

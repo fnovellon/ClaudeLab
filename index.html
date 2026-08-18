@@ -46,13 +46,66 @@
       <div id="suggestions" class="suggestions" hidden></div>
     </div>
 
-    <button id="newGameBtn" class="new-game-btn" type="button" hidden>Nouvelle partie</button>
+    <div class="infinite-actions">
+      <button id="newGameBtn" class="new-game-btn" type="button" hidden>Nouvelle partie</button>
+      <button id="sessionModeBtn" class="new-game-btn" type="button" hidden>🎯 Mode Session</button>
+    </div>
+
+    <section id="sessionConfigPanel" class="session-config-panel" hidden>
+      <h3 id="sessionConfigTitle">Configurer une session</h3>
+      <div class="session-config-row">
+        <span class="session-config-label" id="sessionCountLabel">Nombre de personnages</span>
+        <div class="session-pill-group" id="sessionCountPills">
+          <button class="session-pill" data-count="5" type="button">5</button>
+          <button class="session-pill" data-count="10" type="button">10</button>
+          <button class="session-pill" data-count="15" type="button">15</button>
+          <button class="session-pill" data-count="20" type="button">20</button>
+        </div>
+      </div>
+      <div class="session-config-row">
+        <span class="session-config-label" id="sessionTimeLabel">Limite de temps</span>
+        <div class="session-pill-group" id="sessionTimePills">
+          <button class="session-pill" data-seconds="0" type="button" id="sessionTimeNoneBtn">Aucune</button>
+          <button class="session-pill" data-seconds="60" type="button">1 min</button>
+          <button class="session-pill" data-seconds="120" type="button">2 min</button>
+          <button class="session-pill" data-seconds="180" type="button">3 min</button>
+          <button class="session-pill" data-seconds="300" type="button">5 min</button>
+        </div>
+      </div>
+      <div class="session-config-actions">
+        <button id="sessionStartBtn" class="new-game-btn" type="button">Démarrer la session</button>
+        <button id="sessionCancelBtn" class="toolbar-btn" type="button">Annuler</button>
+      </div>
+    </section>
+
+    <div id="sessionProgress" class="session-progress" hidden>
+      <span id="sessionProgressText"></span>
+      <span id="sessionScoreText"></span>
+      <span id="sessionTimerText" hidden></span>
+      <button id="sessionQuitBtn" class="session-quit-btn" type="button">✕</button>
+    </div>
+
+    <button id="sessionContinueBtn" class="new-game-btn" type="button" hidden>Continuer →</button>
 
     <p id="attemptsLeft" class="attempts"></p>
     <p id="message" class="message"></p>
 
     <button id="shareBtn" class="share-btn" type="button" hidden>📋 Partager mon résultat</button>
     <p id="shareFeedback" class="share-feedback" hidden>Copié dans le presse-papier !</p>
+
+    <section id="sessionResultsPanel" class="session-results-panel" hidden>
+      <h3 id="sessionResultsTitle">Session terminée</h3>
+      <p id="sessionResultsTimeoutNote" class="session-timeout-note" hidden>Temps écoulé !</p>
+      <div class="session-results-summary">
+        <span id="sessionResultsFound" class="session-results-stat"></span>
+        <span id="sessionResultsScore" class="session-results-stat"></span>
+      </div>
+      <div id="sessionResultsGrid" class="session-results-grid"></div>
+      <div class="session-results-actions">
+        <button id="sessionShareBtn" class="share-btn" type="button">📋 Partager la session</button>
+        <button id="sessionRestartBtn" class="new-game-btn" type="button">Nouvelle session</button>
+      </div>
+    </section>
 
     <section id="statsPanel" class="stats-panel" hidden>
       <h2 class="stats-title" id="statsTitle">Statistiques</h2>
