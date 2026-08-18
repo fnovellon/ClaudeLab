@@ -55,9 +55,10 @@ serveur statique, ex. `npx serve .`).
      attendre la fin.
 6. En mode "Défi du jour", une fois la partie terminée, un bouton "📋
    Partager mon résultat" copie dans le presse-papier un résumé façon
-   Wordle (numéro du défi, résultat, une grille d'émojis résumant chaque
-   tentative) accompagné d'un lien vers le jeu, pour inviter quelqu'un à
-   essayer le même personnage du jour.
+   Wordle (numéro du défi, résultat, une grille avec une ligne par
+   tentative et une couleur par colonne — 🟩 identique, 🟨 partiel, ⬜
+   différent, même code couleur que le jeu) accompagné d'un lien vers le
+   jeu, pour inviter quelqu'un à essayer le même personnage du jour.
 7. Le bouton "📖 Encyclopédie" ouvre un tableau consultable de tous les
    personnages du jeu, avec toutes leurs caractéristiques. Les colonnes sont
    triables (cliquer sur un en-tête, un second clic inverse l'ordre) et un

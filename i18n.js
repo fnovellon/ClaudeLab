@@ -54,7 +54,6 @@ const TRANSLATIONS = {
     shareTitle: "Bleachdle #{n}",
     shareResultWin: "Trouvé en {n}/{max} essais ✅",
     shareResultLose: "Perdu ({max}/{max}) ❌",
-    shareLegend: "🟩 trouvé · 🟧 très proche · 🟨 proche · ⬜ loin (1 case = 1 tentative)",
     sharePrompt: "À toi de jouer : {url}",
   },
   en: {
@@ -106,7 +105,6 @@ const TRANSLATIONS = {
     shareTitle: "Bleachdle #{n}",
     shareResultWin: "Found in {n}/{max} guesses ✅",
     shareResultLose: "Lost ({max}/{max}) ❌",
-    shareLegend: "🟩 found · 🟧 very close · 🟨 close · ⬜ far (1 square = 1 guess)",
     sharePrompt: "Your turn: {url}",
   },
   es: {
@@ -158,7 +156,6 @@ const TRANSLATIONS = {
     shareTitle: "Bleachdle #{n}",
     shareResultWin: "Encontrado en {n}/{max} intentos ✅",
     shareResultLose: "Perdido ({max}/{max}) ❌",
-    shareLegend: "🟩 encontrado · 🟧 muy cerca · 🟨 cerca · ⬜ lejos (1 casilla = 1 intento)",
     sharePrompt: "Tu turno: {url}",
   },
   de: {
@@ -210,7 +207,6 @@ const TRANSLATIONS = {
     shareTitle: "Bleachdle #{n}",
     shareResultWin: "Gefunden in {n}/{max} Versuchen ✅",
     shareResultLose: "Verloren ({max}/{max}) ❌",
-    shareLegend: "🟩 gefunden · 🟧 sehr nah · 🟨 nah · ⬜ weit weg (1 Feld = 1 Versuch)",
     sharePrompt: "Du bist dran: {url}",
   },
 };

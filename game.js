@@ -548,32 +548,26 @@ function syncGameControls() {
   }
 }
 
-// Texte de partage façon Wordle : numéro du défi, résultat, une grille d'émojis résumant
-// chaque tentative (un carré = une tentative entière, pas un attribut individuel, faute de quoi
-// la grille serait illisible avec ~12 attributs par tentative) : 🟩 = personnage trouvé,
-// 🟧 = tentative très proche (≥ 2/3 des attributs corrects), 🟨 = tentative moyenne (≥ 1/3),
-// ⬜ = tentative éloignée. Une légende est incluse dans le texte lui-même (pas seulement dans le
-// jeu) puisque le destinataire du partage n'a pas forcément ce contexte.
+// Texte de partage façon Wordle : numéro du défi, résultat, puis une grille d'émojis avec une
+// ligne par tentative et une colonne par attribut (même ordre que ATTRIBUTES, donc que les
+// colonnes du tableau de jeu) : 🟩 = attribut identique, 🟨 = partiel, ⬜ = différent. Reprend
+// directement le code couleur déjà utilisé dans le jeu, donc pas besoin de légende séparée.
 function buildShareText() {
   const puzzleNumber = getDailyPuzzleNumber();
   const resultLine = state.won
     ? t("shareResultWin", { n: state.guesses.length, max: MAX_ATTEMPTS })
     : t("shareResultLose", { max: MAX_ATTEMPTS });
-  const grid = state.guesses
-    .map((name, i) => {
-      const isWinRow = state.won && i === state.guesses.length - 1;
-      if (isWinRow) return "🟩";
-      const guessChar = findCharacterByName(name);
-      const matchCount = ATTRIBUTES.filter((attr) => compareAttribute(attr, guessChar, target).state === "correct").length;
-      const ratio = matchCount / ATTRIBUTES.length;
-      if (ratio >= 2 / 3) return "🟧";
-      if (ratio >= 1 / 3) return "🟨";
+  const rows = state.guesses.map((name) => {
+    const guessChar = findCharacterByName(name);
+    return ATTRIBUTES.map((attr) => {
+      const result = compareAttribute(attr, guessChar, target);
+      if (result.state === "correct") return "🟩";
+      if (result.state === "partial") return "🟨";
       return "⬜";
-    })
-    .join("");
-  const legend = t("shareLegend");
+    }).join("");
+  });
   const title = `${t("shareTitle", { n: puzzleNumber })} — ${resultLine}`;
-  return [title, grid, legend, "", t("sharePrompt", { url: window.location.href })].join("\n");
+  return [title, ...rows, "", t("sharePrompt", { url: window.location.href })].join("\n");
 }
 
 let shareFeedbackTimeout = null;
